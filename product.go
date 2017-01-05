@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/qor/admin"
-	"github.com/qor/qor"
 	"github.com/qor/qor/resource"
 )
 
@@ -22,7 +21,5 @@ func (variationsConfig *VariationsConfig) GetTemplate(context *admin.Context, me
 func (variationsConfig *VariationsConfig) ConfigureQorMeta(metaor resource.Metaor) {
 	if meta, ok := metaor.(*admin.Meta); ok {
 		meta.Type = "product_variations"
-		meta.Valuer = func(interface{}, *qor.Context) interface{} { return "" }
-		meta.SetValuer(meta.Valuer)
 	}
 }
