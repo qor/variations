@@ -7,6 +7,53 @@
     {{meta_label .Meta}}
   </label>
 
+  <!--fake select many-->
+  <div class="qor-field">
+    <label class="qor-field__label">
+      Colors
+    </label>
+    <div class="qor-field__edit qor-field__block qor-field__selectmany" data-toggle="qor.selectmany" >
+
+        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="QorResource.Rules[3].SerializableMeta.ProductCodes" multiple="" tabindex="-1" aria-hidden="true" chooser-selected="true">
+          <option value="12">White</option>
+          <option value="11">Red</option>
+          <option value="10">Blue</option>
+        </select>
+
+    </div>
+  </div>
+
+  <div class="qor-field">
+    <label class="qor-field__label">
+      Sizes
+    </label>
+    <div class="qor-field__edit qor-field__block qor-field__selectmany" data-toggle="qor.selectmany" >
+        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="QorResource.Rules[3].SerializableMeta.ProductCodes" multiple="" tabindex="-1" aria-hidden="true" chooser-selected="true">
+          <option value="12">S</option>
+          <option value="11">M</option>
+          <option value="10">L</option>
+          <option value="9">SM</option>
+          <option value="8">SL</option>
+        </select>
+
+    </div>
+  </div>
+
+  <div class="qor-field">
+    <label class="qor-field__label">
+      Material
+    </label>
+    <div class="qor-field__edit qor-field__block qor-field__selectmany" data-toggle="qor.selectmany" >
+        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="QorResource.Rules[3].SerializableMeta.ProductCodes" multiple="" tabindex="-1" aria-hidden="true" chooser-selected="true">
+          <option value="12">Cotton</option>
+          <option value="8">carbon fibre</option>
+          <option value="8">woollen fabric</option>
+        </select>
+
+    </div>
+  </div>
+  <!--end: fake select many-->
+
   <div class="qor-field__block">
     <table>
       <thead>
