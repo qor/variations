@@ -8,16 +8,24 @@
 
   <div class="qor-field__block">
     {{if $current_values}}
-      {{range $index, $value := $current_values }}
-        <fieldset class="qor-fieldset">
-          {{if has_delete_permission $meta}}
-            <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
-              <i class="material-icons md-18">delete</i>
-            </button>
+      <table>
+        <thead>
+          {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}<br>
+            <td>{{meta_label $meta}}</td>
           {{end}}
-          {{render_nested_form $value (edit_sections $meta.Resource) $index}}
-        </fieldset>
-      {{end}}
+        </thead>
+        <tbody>
+          {{range $index, $value := $current_values}}
+            <tr>
+              {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}<br>
+                <td>
+                  {{formatted_value_of $value $meta}}
+                </td>
+              {{end}}
+            </tr>
+          {{end}}
+        </tbody>
+      </table>
     {{end}}
 
     {{if has_create_permission .Meta}}
