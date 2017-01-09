@@ -7,103 +7,104 @@
     {{meta_label .Meta}}
   </label>
 
+  <div class="qor-product__property">
   <!--fake select many-->
-  <div class="">
+  <div class="qor-product__property-selector" data-variant-type="colors">
     <label class="qor-field__label">
       Colors
     </label>
     <div class="qor-field__edit qor-field__block qor-field__selectmany" data-toggle="qor.selectmany" >
-
-        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="QorResource.Rules[3].SerializableMeta.ProductCodes" multiple="" tabindex="-1" aria-hidden="true" chooser-selected="true">
+        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="" multiple="" tabindex="-1" aria-hidden="true">
           <option value="12">White</option>
           <option value="11">Red</option>
           <option value="10">Blue</option>
         </select>
-
     </div>
   </div>
 
-  <div class="">
+  <div class="qor-product__property-selector" data-variant-type="sizes">
     <label class="qor-field__label">
       Sizes
     </label>
     <div class="qor-field__edit qor-field__block qor-field__selectmany" data-toggle="qor.selectmany" >
-        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="QorResource.Rules[3].SerializableMeta.ProductCodes" multiple="" tabindex="-1" aria-hidden="true" chooser-selected="true">
+        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="" multiple="" tabindex="-1" aria-hidden="true">
           <option value="12">S</option>
           <option value="11">M</option>
           <option value="10">L</option>
           <option value="9">SM</option>
           <option value="8">SL</option>
         </select>
-
     </div>
   </div>
 
-  <div class="">
+  <div class="qor-product__property-selector" data-variant-type="material">
     <label class="qor-field__label">
       Material
     </label>
     <div class="qor-field__edit qor-field__block qor-field__selectmany" data-toggle="qor.selectmany" >
-        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="QorResource.Rules[3].SerializableMeta.ProductCodes" multiple="" tabindex="-1" aria-hidden="true" chooser-selected="true">
+        <select class="qor-field__input hidden select2-hidden-accessible" data-toggle="qor.chooser" data-placeholder="Select some Options" name="" multiple="" tabindex="-1" aria-hidden="true">
           <option value="12">Cotton</option>
           <option value="8">carbon fibre</option>
           <option value="8">woollen fabric</option>
         </select>
-
     </div>
   </div>
   <!--end: fake select many-->
+  </div>
 
-  <div class="qor-field__block">
-    <table>
-      <thead>
-        {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}<br>
-          <td data-input-name="{{$meta.Name}}">{{meta_label $meta}}</td>
-        {{end}}
-      </thead>
-      <tbody>
-        {{if $current_values}}
-          {{range $index, $value := $current_values}}
-            <tr>
-              {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}<br>
-                <td data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">
-                  {{formatted_value_of $value $meta}}
-                </td>
-              {{end}}
-            </tr>
+  <div class="qor-fieldset-container">
+    <div class="qor-field__block" data-fieldset-hidden="true">
+      <table>
+        <thead>
+          {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}<br>
+            <td data-input-name="{{$meta.Name}}">{{meta_label $meta}}</td>
           {{end}}
-        {{end}}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {{if $current_values}}
+            {{range $index, $value := $current_values}}
+              <tr>
+                {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}<br>
+                  <td data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">
+                    {{formatted_value_of $value $meta}}
+                  </td>
+                {{end}}
+              </tr>
+            {{end}}
+          {{end}}
+        </tbody>
+      </table>
 
-    {{range $index, $value := $current_values }}
-      <fieldset class="qor-fieldset hidden">
-        {{if has_delete_permission $meta}}
+      {{range $index, $value := $current_values }}
+        <fieldset class="qor-fieldset">
+          {{if has_delete_permission $meta}}
+            <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
+              <i class="material-icons md-18">delete</i>
+            </button>
+          {{end}}
+          {{render_nested_form $value (edit_sections $meta.Resource) $index}}
+        </fieldset>
+      {{end}}
+
+      {{if has_create_permission .Meta}}
+        <fieldset class="qor-fieldset qor-fieldset--new">
           <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
             <i class="material-icons md-18">delete</i>
           </button>
-        {{end}}
-        {{render_nested_form $value (edit_sections $meta.Resource) $index}}
-      </fieldset>
-    {{end}}
+          {{if $current_values}}
+            {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) (len $current_values)}}
+          {{else}}
+            {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) 0}}
+          {{end}}
+        </fieldset>
 
-    {{if has_create_permission .Meta}}
-      <fieldset class="qor-fieldset qor-fieldset--new">
-        <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
-          <i class="material-icons md-18">delete</i>
+        <button class="mdl-button mdl-button--primary mdl-js-button mdl-js-ripple-effect qor-fieldset__add" type="button">
+          {{t (printf "%v.attributes.add_%v" .BaseResource.ToParam (singular (meta_label .Meta))) (printf "Add %v" (singular (meta_label .Meta)))}}
         </button>
-        {{if $current_values}}
-          {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) (len $current_values)}}
-        {{else}}
-          {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) 0}}
-        {{end}}
-      </fieldset>
-
-      <button class="mdl-button mdl-button--primary mdl-js-button mdl-js-ripple-effect qor-fieldset__add" type="button">
-        {{t (printf "%v.attributes.add_%v" .BaseResource.ToParam (singular (meta_label .Meta))) (printf "Add %v" (singular (meta_label .Meta)))}}
-      </button>
-    {{end}}
+      {{end}}
+    </div>
   </div>
+
 </div>
 
 <script src="/admin/assets/javascripts/product.js?theme=product"></script>

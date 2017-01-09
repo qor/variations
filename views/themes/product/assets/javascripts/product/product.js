@@ -17,6 +17,8 @@
     var EVENT_ENABLE = 'enable.' + NAMESPACE;
     var EVENT_DISABLE = 'disable.' + NAMESPACE;
     var EVENT_CLICK = 'click.' + NAMESPACE;
+    var CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
+    var CLASS_SELECT_TYPE = '.qor-product__property-selector';
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -29,15 +31,40 @@
 
         init: function() {
             this.bind();
+            this.variants = {};
+            this.initVariants();
         },
 
         bind: function() {
-            // this.$element
-
+            this.$element.on('select2:select', CLASS_SELECT, this.collectVariants.bind(this));
         },
 
         unbind: function() {
             // this.$element
+        },
+
+        initVariants: function() {
+            let $type = $(CLASS_SELECT_TYPE),
+                len = $type.length;
+
+            for (var i = 0; i < len; i++) {
+                this.variants[$type[i].dataset.variantType] = [];
+            }
+
+        },
+
+        collectVariants: function(e) {
+            let type = $(e.target).closest(CLASS_SELECT_TYPE).data('variant-type'),
+                property = e.params.data.text || e.params.data.title;
+
+            this.variants[type].push(property);
+            // console.log(this.variants);
+            this.renderVariants();
+
+        },
+
+        renderVariants: function() {
+
         },
 
         destroy: function() {
