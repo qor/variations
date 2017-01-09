@@ -2,13 +2,13 @@
 {{$meta := .Meta}}
 {{$inputName := .InputName}}
 
-<div class="qor-field collection-edit qor-fieldset-container">
+<div class="qor-field" data-toggle="qor.product.variants">
   <label class="qor-field__label" for="{{.InputId}}">
     {{meta_label .Meta}}
   </label>
 
   <!--fake select many-->
-  <div class="qor-field">
+  <div class="">
     <label class="qor-field__label">
       Colors
     </label>
@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <div class="qor-field">
+  <div class="">
     <label class="qor-field__label">
       Sizes
     </label>
@@ -39,7 +39,7 @@
     </div>
   </div>
 
-  <div class="qor-field">
+  <div class="">
     <label class="qor-field__label">
       Material
     </label>
@@ -105,3 +105,5 @@
     {{end}}
   </div>
 </div>
+
+<script src="/admin/assets/javascripts/product.js?theme=product"></script>
