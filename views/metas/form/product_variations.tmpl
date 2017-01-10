@@ -54,7 +54,8 @@
 
   <div>
     {{range $primaryMeta := $meta.Config.PrimaryAttributeMetas}}
-      <!-- render meta based on meta type (like select one -> select many)-->
+      <!-- render meta based on meta type (like select one -> select many, string -> tags) -->
+      {{render_meta $meta.Resource.NewStruct $primaryMeta "variations"}}
     {{end}}
   </div>
 
