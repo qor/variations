@@ -52,6 +52,12 @@
   <!--end: fake select many-->
   </div>
 
+  <div>
+    {{range $primaryMeta := $meta.Config.PrimaryAttributeMetas}}
+      <!-- render meta based on meta type (like select one -> select many)-->
+    {{end}}
+  </div>
+
   <div class="qor-fieldset-container">
     <div class="qor-field__block" data-fieldset-hidden="true">
       <table>
