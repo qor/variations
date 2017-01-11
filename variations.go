@@ -22,7 +22,7 @@ func (variationsConfig *VariationsConfig) GetTemplate(context *admin.Context, me
 
 func (variationsConfig *VariationsConfig) ConfigureQorMeta(metaor resource.Metaor) {
 	if meta, ok := metaor.(*admin.Meta); ok {
-		meta.Type = "product_variations"
+		meta.Type = "variations"
 
 		variationsRes := meta.Resource
 		for _, meta := range variationsRes.ConvertSectionToMetas(meta.Resource.EditAttrs()) {
