@@ -1,5 +1,5 @@
-{{$current_values := (raw_value_of .ResourceValue .Meta)}} 
-{{$meta := .Meta}} 
+{{$current_values := (raw_value_of .ResourceValue .Meta)}}
+{{$meta := .Meta}}
 {{$inputName := .InputName}}
 
 <link rel="stylesheet" href="/admin/assets/stylesheets/qor_variations.css?theme=product" />
@@ -45,7 +45,7 @@
                 <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
                     <i class="material-icons md-18">delete</i>
                 </button>
-                {{end}} 
+                {{end}}
                 {{render_nested_form $value (edit_sections $meta.Resource) $index}}
             </fieldset>
             {{end}}
@@ -54,17 +54,17 @@
             <fieldset class="qor-fieldset qor-fieldset--new">
                 <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
                     <i class="material-icons md-18">delete</i>
-                    </button> 
-                    {{if $current_values}} 
-                        {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) (len $current_values)}} 
-                    {{else}} 
-                        {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) 0}} 
+                    </button>
+                    {{if $current_values}}
+                        {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) (len $current_values)}}
+                    {{else}}
+                        {{render_nested_form $meta.Resource.NewStruct (new_sections $meta.Resource) 0}}
                     {{end}}
             </fieldset>
 
             <button class="mdl-button mdl-button--primary mdl-js-button mdl-js-ripple-effect qor-fieldset__add hidden" type="button">
                 {{t (printf "%v.attributes.add_%v" .BaseResource.ToParam (singular (meta_label .Meta))) (printf "Add %v" (singular (meta_label .Meta)))}}
-            </button> 
+            </button>
             {{end}}
         </div>
     </div>
