@@ -14,13 +14,17 @@
     'use strict';
 
     const _ = window._;
+    const $document = $(document);
     const NAMESPACE = 'qor.product.variants';
     const EVENT_ENABLE = 'enable.' + NAMESPACE;
     const EVENT_DISABLE = 'disable.' + NAMESPACE;
-    const EVENT_CLICK = 'click.' + NAMESPACE;
+    const NAME_REPLICATOR = 'qor.replicator';
+    const EVENT_REPLICATOR_ADDED = 'added.qor.replicator';
     const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
     const CLASS_SELECT_TYPE = '.qor-product__property-selector';
-    const CLASS_TBODY = '.qor-product__table table tbody';
+    const CLASS_TBODY = '.qor-product__table tbody';
+    const CLASS_FIELDSET_CONTAINER = '.qor-product__container';
+    const CLASS_BUTTON_ADD = '.qor-fieldset__add';
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -32,16 +36,22 @@
         constructor: QorProductVariants,
 
         init: function () {
+            let $element = this.$element;
             this.bind();
             this.variants = {};
             this.productMetas = [];
             this.templateData = [];
             this.templateData = [];
-            this.$tbody = this.$element.find(CLASS_TBODY);
+            this.$tbody = $element.find(CLASS_TBODY);
+            this.replicator = $element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
+            this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
             this.initMetas();
         },
 
         bind: function () {
+            $document
+                .on(EVENT_REPLICATOR_ADDED, this.addVariantReplicator.bind(this));
+
             this.$element
                 .on('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this));
         },
@@ -75,6 +85,12 @@
             this.template = `${template}</tr>`;
         },
 
+        // sync variants data between table and replicator
+        addVariantReplicator: function (e, $item) {
+            // $item.attr('data-variants', JSON.stringify(variants));
+            // $item.attr('variants-id', variants.id);
+        },
+
         selectVariants: function (e) {
             let type = $(e.target).closest(CLASS_SELECT_TYPE).data('variant-type'),
                 params = e.params.data,
@@ -82,7 +98,6 @@
                 variantValue = params.text || params.title || params.Name,
                 topValue = `${type}s`,
                 variantData = {};
-
 
             this.variants[topValue] = this.variants[topValue] || [];
 
@@ -144,13 +159,17 @@
             $tbody.html('');
             _.each(templateData, function (data) {
                 $tbody.append(window.Mustache.render(template, data));
-            });
+
+                // TODO: add replicator
+                // this.replicator.add(null, this.$replicatorBtn);
+            }.bind(this));
         },
 
         generateData: function (arrs) {
             let variantsHasValueKey = this.variantsHasValueKey,
                 variants = this.variants,
-                obj = {};
+                obj = {},
+                randomString = (Math.random() + 1).toString(36).substring(7);
 
             // assume has Variants Data: 
             // varints = {Color: [{Color: Blue},{Color: White}], Size: [{Size: S}, {Size: M}]}
@@ -168,7 +187,7 @@
             for (let i = 0, len = arrs.length; i < len; i++) {
                 obj = Object.assign({}, obj, variants[variantsHasValueKey[i]][arrs[i]]);
             }
-
+            // obj.id = randomString;
             this.templateData.push(obj);
         },
 
