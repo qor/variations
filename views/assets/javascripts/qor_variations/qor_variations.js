@@ -42,7 +42,8 @@
         },
 
         bind: function () {
-            this.$element.on('select2:select', CLASS_SELECT, this.selectVariants.bind(this));
+            this.$element
+                .on('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this));
         },
 
         unbind: function () {
@@ -77,13 +78,24 @@
         selectVariants: function (e) {
             let type = $(e.target).closest(CLASS_SELECT_TYPE).data('variant-type'),
                 params = e.params.data,
-                value = params.text || params.title || params.Name,
+                isSelected = params.selected,
+                variantValue = params.text || params.title || params.Name,
                 topValue = `${type}s`,
                 variantData = {};
 
-            variantData[type] = value;
+
             this.variants[topValue] = this.variants[topValue] || [];
-            this.variants[topValue].push(variantData);
+
+            if (isSelected) {
+                variantData[type] = variantValue;
+                this.variants[topValue].push(variantData);
+            } else {
+                variantData = this.variants[topValue].filter(function (item) {
+                    return item[type] != variantValue;
+                });
+                this.variants[topValue] = variantData;
+            }
+
             this.renderVariants();
         },
 
@@ -96,6 +108,8 @@
             });
 
             if (variantsHasValueKey.length === 0) {
+                // empty table if no variants selected
+                this.$tbody.html('');
                 return;
             }
 
@@ -166,7 +180,7 @@
             if (maxIndices.length == 0) {
                 func(args);
             } else {
-                var rest = maxIndices.slice(1);
+                let rest = maxIndices.slice(1);
                 for (args[index] = 0; args[index] < maxIndices[0]; ++args[index]) {
                     this.convertMultipleVariantsData(rest, func, args, index + 1);
                 }
@@ -182,9 +196,9 @@
 
     QorProductVariants.plugin = function (options) {
         return this.each(function () {
-            var $this = $(this);
-            var data = $this.data(NAMESPACE);
-            var fn;
+            let $this = $(this);
+            let data = $this.data(NAMESPACE);
+            let fn;
 
             if (!data) {
                 if (/destroy/.test(options)) {
@@ -201,7 +215,7 @@
 
 
     $(function () {
-        var selector = '[data-toggle="qor.product.variants"]';
+        let selector = '[data-toggle="qor.product.variants"]';
 
         $(document)
             .
