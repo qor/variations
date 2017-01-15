@@ -2,7 +2,6 @@
 {{$meta := .Meta}}
 {{$inputName := .InputName}}
 
-<link rel="stylesheet" href="/admin/assets/stylesheets/qor_variations.css?theme=product" />
 <div class="qor-field" data-toggle="qor.product.variants" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
   <label class="qor-field__label" for="{{.InputId}}">
     {{meta_label .Meta}}

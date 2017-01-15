@@ -25,6 +25,7 @@
     const CLASS_TBODY = '.qor-product__table tbody';
     const CLASS_FIELDSET_CONTAINER = '.qor-product__container';
     const CLASS_BUTTON_ADD = '.qor-fieldset__add';
+    const ID_VARIANTS_PRE = 'qor_variants_id_';
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -43,7 +44,6 @@
             this.templateData = [];
             this.templateData = [];
             this.$tbody = $element.find(CLASS_TBODY);
-            this.replicator = $element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
             this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
             this.initMetas();
         },
@@ -71,6 +71,10 @@
             this.setTemplate();
         },
 
+        removeSpace: function (value) {
+            return value.replace(/\s/g, '');
+        },
+
         setTemplate: function () {
             let productMetas = this.productMetas,
                 template = '<tr>';
@@ -86,9 +90,21 @@
         },
 
         // sync variants data between table and replicator
-        addVariantReplicator: function (e, $item) {
-            // $item.attr('data-variants', JSON.stringify(variants));
-            // $item.attr('variants-id', variants.id);
+        addVariantReplicator: function (e, $item, data) {
+            $item.prop('id', data.variantID);
+            $item.attr('variant-data', JSON.stringify(data));
+        },
+
+        // if realready have variants, will not generate replicator.
+        compareVariants: function (data) {
+            let variantID = data.variantID,
+                $item = this.$element.find(`#${variantID}`);
+
+            if ($item.length) {
+                return true;
+            }
+
+            return false;
         },
 
         selectVariants: function (e) {
@@ -116,19 +132,19 @@
 
         renderVariants: function () {
             let variants = this.variants,
-                variantsHasValueKey = [];
+                variantsKey = [];
 
-            variantsHasValueKey = Object.keys(variants).filter(function (variant) {
+            variantsKey = Object.keys(variants).filter(function (variant) {
                 return variants[variant].length > 0;
             });
 
-            if (variantsHasValueKey.length === 0) {
+            if (variantsKey.length === 0) {
                 // empty table if no variants selected
                 this.$tbody.html('');
                 return;
             }
 
-            this.variantsHasValueKey = variantsHasValueKey;
+            this.variantsKey = variantsKey;
             this.convertVariantsData();
 
         },
@@ -136,16 +152,30 @@
         convertVariantsData: function () {
             let variants = this.variants,
                 maxIndices = [],
-                variantsHasValueKey = this.variantsHasValueKey;
+                variantsKey = this.variantsKey;
 
-            _.each(variantsHasValueKey, function (key) {
+
+            _.each(variantsKey, function (key) {
                 maxIndices.push(variants[key].length);
             });
 
-            if (variantsHasValueKey.length === 1) {
-                this.templateData = variants[variantsHasValueKey[0]];
+            this.templateData = [];
+
+            if (variantsKey.length === 1) {
+                let variant = variants[variantsKey[0]],
+                    obj = {};
+
+                _.each(variant, function (item) {
+                    let key = _.keys(item)[0],
+                        value = item[key];
+
+                    obj[key] = value;
+                    obj.variantID = `${ID_VARIANTS_PRE}${value.replace(/\s/g, '')}`;
+                    this.templateData.push(obj);
+                }.bind(this));
+
             } else {
-                this.templateData = [];
+                // TODO: compare each ID? not just empty templateData.
                 this.handleMultipleVariantsData(maxIndices, this.generateData.bind(this));
             }
             this.renderVariantsTable();
@@ -156,38 +186,44 @@
                 template = this.template,
                 templateData = this.templateData;
 
+            this.replicator = this.replicator || this.$element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
+
             $tbody.html('');
             _.each(templateData, function (data) {
                 $tbody.append(window.Mustache.render(template, data));
+                if (this.compareVariants(data)) {
+                    // TODO: restore removed variants
+                } else {
+                    this.replicator.add(null, this.$replicatorBtn, data);
+                }
 
-                // TODO: add replicator
-                // this.replicator.add(null, this.$replicatorBtn);
             }.bind(this));
         },
 
         generateData: function (arrs) {
-            let variantsHasValueKey = this.variantsHasValueKey,
+            let variantsKey = this.variantsKey,
                 variants = this.variants,
-                obj = {},
-                randomString = (Math.random() + 1).toString(36).substring(7);
-
+                objValues,
+                obj = {};
             // assume has Variants Data: 
             // varints = {Color: [{Color: Blue},{Color: White}], Size: [{Size: S}, {Size: M}]}
             // arrs will be (2X2): [0,0],[0,1],[1,0],[1,1]
-            // variantsHasValueKey = [Color, Size];
+            // variantsKey = [Color, Size];
             // obj will be [{Color: Blue, Size: S},{Color: Blue, Size: M},{Color: White, Size: S},{Color: White, Size: M}]
             // 
             // if have 3(or more) variants type: [Color, Size, Material]
             // varints = {Color: [{Color: Blue},{Color: White}], Size: [{Size: S}, {Size: M}], Material: [{Material: Jersey}, {Material: Cashmere}]}
             // arrs will be (2X2X2) : [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1]
             // 
-            // variants[variantsHasValueKey[i]][arrs[i]]);
-            // variantsHasValueKey[i] will get varints.Color
+            // variants[variantsKey[i]][arrs[i]]);
+            // variantsKey[i] will get varints.Color
             // arrs[i] will get varints.Color[0] => {Color: Blue}
             for (let i = 0, len = arrs.length; i < len; i++) {
-                obj = Object.assign({}, obj, variants[variantsHasValueKey[i]][arrs[i]]);
+                obj = Object.assign({}, obj, variants[variantsKey[i]][arrs[i]]);
             }
-            // obj.id = randomString;
+
+            objValues = _.values(obj).map(this.removeSpace);
+            obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
             this.templateData.push(obj);
         },
 
