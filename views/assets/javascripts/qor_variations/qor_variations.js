@@ -26,6 +26,8 @@
     const CLASS_FIELDSET_CONTAINER = '.qor-product__container';
     const CLASS_BUTTON_ADD = '.qor-fieldset__add';
     const ID_VARIANTS_PRE = 'qor_variants_id_';
+    const CLASS_REMOVE = 'should_remove';
+    const CLASS_VARIANT_FEILD = '.qor-fieldset[variant-data]';
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -67,12 +69,11 @@
                 this.productMetas.push($(productMeta).data('inputName'));
             }.bind(this));
 
-
             this.setTemplate();
         },
 
         removeSpace: function (value) {
-            return value.replace(/\s/g, '');
+            return value.toString().replace(/\s/g, '');
         },
 
         setTemplate: function () {
@@ -82,29 +83,9 @@
 
             _.each(productMetas, function (productMeta) {
                 template = `${template}<td>[[${productMeta}]]</td>`;
-                // TODO: insert template data
-                // this.templateData[productMeta] = '';
             }.bind(this));
 
             this.template = `${template}</tr>`;
-        },
-
-        // sync variants data between table and replicator
-        addVariantReplicator: function (e, $item, data) {
-            $item.prop('id', data.variantID);
-            $item.attr('variant-data', JSON.stringify(data));
-        },
-
-        // if realready have variants, will not generate replicator.
-        compareVariants: function (data) {
-            let variantID = data.variantID,
-                $item = this.$element.find(`#${variantID}`);
-
-            if ($item.length) {
-                return true;
-            }
-
-            return false;
         },
 
         selectVariants: function (e) {
@@ -119,6 +100,7 @@
 
             if (isSelected) {
                 variantData[type] = variantValue;
+                variantData.id = params.id;
                 this.variants[topValue].push(variantData);
             } else {
                 variantData = this.variants[topValue].filter(function (item) {
@@ -126,7 +108,6 @@
                 });
                 this.variants[topValue] = variantData;
             }
-
             this.renderVariants();
         },
 
@@ -159,23 +140,26 @@
                 maxIndices.push(variants[key].length);
             });
 
+            // store last template data to compare.
+            this.lastTemplateData = this.templateData;
             this.templateData = [];
 
             if (variantsKey.length === 1) {
                 let variant = variants[variantsKey[0]];
 
-                _.each(variant, function (item) {
-                    let key = _.keys(item)[0],
+                for (let i = 0, len = variant.length; i < len; i++) {
+                    let item = variant[i],
+                        key = _.keys(item)[0],
                         value = item[key],
                         obj = {};
 
                     obj[key] = value;
+                    obj.id = item.id;
                     obj.variantID = `${ID_VARIANTS_PRE}${value.replace(/\s/g, '')}`;
                     this.templateData.push(obj);
-                }.bind(this));
+                }
 
             } else {
-                // TODO: compare each ID? not just empty templateData.
                 this.handleMultipleVariantsData(maxIndices, this.generateData.bind(this));
             }
             this.renderVariantsTable();
@@ -186,18 +170,13 @@
                 template = this.template,
                 templateData = this.templateData;
 
-            this.replicator = this.replicator || this.$element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
-
             $tbody.html('');
-            _.each(templateData, function (data) {
-                $tbody.append(window.Mustache.render(template, data));
-                if (this.compareVariants(data)) {
-                    // TODO: restore removed variants
-                } else {
-                    this.replicator.add(null, this.$replicatorBtn, data);
-                }
 
-            }.bind(this));
+            for (let i = 0, len = templateData.length; i < len; i++) {
+                $tbody.append(window.Mustache.render(template, templateData[i]));
+            }
+
+            this.doReplicator();
         },
 
         generateData: function (arrs) {
@@ -219,8 +198,18 @@
             // variantsKey[i] will get varints.Color
             // arrs[i] will get varints.Color[0] => {Color: Blue}
             for (let i = 0, len = arrs.length; i < len; i++) {
-                obj = Object.assign({}, obj, variants[variantsKey[i]][arrs[i]]);
+                // console.log(variants[variantsKey[i]][arrs[i]]);
+                // console.log('-------');
+                let item = variants[variantsKey[i]][arrs[i]];
+
+                obj[`${variantsKey[i]}_ID`] = item.id;
+                obj = Object.assign({}, obj, item);
             }
+
+            delete obj.id;
+
+            //obj will be:
+            //Color: {"Color": "White",Colors_ID: 3,Size: "M",Sizes_ID: 2,variantID: "qor_variants_id_3_White_2_M"}
 
             objValues = _.values(obj).map(this.removeSpace);
             obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
@@ -242,12 +231,75 @@
             }
         },
 
+        // sync variants data between table and replicator
+        addVariantReplicator: function (e, $item, data) {
+            $item.prop('id', data.variantID);
+            $item.attr('variant-data', JSON.stringify(data));
+            this.syncReplicatorData($item, data);
+        },
+
+        syncReplicatorData: function ($item, data) {
+            let keys = Object.keys(data);
+
+            for (let i = 0, len = keys.length; i < len; i++) {
+                let $input = $item.find(`[name$=${keys[i]}]`).not('[type="hidden"]');
+                let idKey;
+
+                if (!$input.length) {
+                    continue;
+                }
+
+                if ($input.is('select')) {
+                    if ($input.data('remote-data')) {
+                        idKey = `${keys[i]}s_ID`;
+                        $input.append(`<option value='${data.id || data[idKey]}'>${data[keys[i]]}</option>`).trigger('change');
+                    } else {
+
+                        // not select
+                    }
+                }
+            }
+        },
+
+        doReplicator: function () {
+            let templateData = this.templateData,
+                lastTemplateData = this.lastTemplateData,
+                oldObj,
+                newObj = [];
+
+
+            this.$element.find(CLASS_VARIANT_FEILD).addClass(CLASS_REMOVE);
+
+            for (let i = 0, len = templateData.length; i < len; i++) {
+                let data = templateData[i];
+                oldObj = _.filter(lastTemplateData, function (lastData) {
+                    return _.isEqual(lastData, data);
+                });
+
+                if (oldObj.length) {
+                    let $oldID = $(`#${oldObj[0].variantID}`);
+                    if ($oldID.length) {
+                        $oldID.removeClass(CLASS_REMOVE);
+                    }
+                } else {
+                    newObj.push(data);
+                }
+            }
+
+            this.replicator = this.replicator || this.$element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
+            setTimeout(() => {
+                this.replicator.addReplicators(newObj, this.$replicatorBtn);
+            }, 500);
+
+            this.$element.find(`${CLASS_VARIANT_FEILD}.${CLASS_REMOVE}`).remove();
+
+        },
+
         destroy: function () {
             this.unbind();
             this.$element.removeData(NAMESPACE);
         }
     };
-
 
     QorProductVariants.plugin = function (options) {
         return this.each(function () {
@@ -267,7 +319,6 @@
             }
         });
     };
-
 
     $(function () {
         let selector = '[data-toggle="qor.product.variants"]';
