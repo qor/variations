@@ -162,12 +162,12 @@
             this.templateData = [];
 
             if (variantsKey.length === 1) {
-                let variant = variants[variantsKey[0]],
-                    obj = {};
+                let variant = variants[variantsKey[0]];
 
                 _.each(variant, function (item) {
                     let key = _.keys(item)[0],
-                        value = item[key];
+                        value = item[key],
+                        obj = {};
 
                     obj[key] = value;
                     obj.variantID = `${ID_VARIANTS_PRE}${value.replace(/\s/g, '')}`;
