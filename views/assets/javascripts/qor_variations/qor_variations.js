@@ -233,8 +233,7 @@
 
         // sync variants data between table and replicator
         addVariantReplicator: function (e, $item, data) {
-            $item.prop('id', data.variantID);
-            $item.attr('variant-data', JSON.stringify(data));
+            $item.attr({ 'variant-data': JSON.stringify(data), 'id': data.variantID }).hide();
             this.syncReplicatorData($item, data);
         },
 
