@@ -21,18 +21,29 @@
         <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
           <thead>
             {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}
-              <td class="qor-product__meta" data-input-name="{{$meta.Name}}">{{meta_label $meta}}</td>
+              <th class="qor-product__meta mdl-data-table__cell--non-numeric" data-input-name="{{$meta.Name}}">{{meta_label $meta}}</th>
             {{end}}
+            <th></th>
           </thead>
           <tbody>
             {{if $current_values}}
               {{range $index, $value := $current_values}}
                 <tr>
                   {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}
-                    <td data-input-name="{{printf " %v[%v].%v " $inputName $index $meta.Name}}">
+                    <td class="mdl-data-table__cell--non-numeric" data-input-name="{{printf " %v[%v].%v " $inputName $index $meta.Name}}">
                       {{formatted_value_of $value $meta}}
                     </td>
                   {{end}}
+                  <td>
+                    <button id="actions-for-{{$index}}" class="mdl-button mdl-js-button mdl-button--icon">
+                      <i class="material-icons">more_vert</i>
+                    </button>
+                    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="actions-for-{{$index}}">
+                      <li class="mdl-menu__item" qor-icon-name="Edit">
+                        <a href="javascript://">Edit</a>
+                      </li>
+                  </ul>
+                  </td>
                 </tr>
               {{end}}
             {{end}}
@@ -41,7 +52,7 @@
       </div>
 
       {{range $index, $value := $current_values }}
-        <fieldset class="qor-fieldset hidden">
+        <fieldset class="qor-fieldset qor-fieldset--init hidden">
           {{if has_delete_permission $meta}}
             <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
               <i class="material-icons md-18">delete</i>

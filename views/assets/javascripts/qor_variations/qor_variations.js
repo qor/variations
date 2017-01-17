@@ -27,7 +27,8 @@
     const CLASS_BUTTON_ADD = '.qor-fieldset__add';
     const ID_VARIANTS_PRE = 'qor_variants_id_';
     const CLASS_REMOVE = 'should_remove';
-    const CLASS_VARIANT_FEILD = '.qor-fieldset[variant-data]';
+    const CLASS_INIT_FIELDSET = '.qor-fieldset--init';
+    const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new)';
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -42,12 +43,13 @@
             let $element = this.$element;
             this.bind();
             this.variants = {};
+            this.PrimaryInitMetaData = {};
             this.productMetas = [];
-            this.templateData = [];
             this.templateData = [];
             this.$tbody = $element.find(CLASS_TBODY);
             this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
             this.initMetas();
+            this.initPrimaryMeta();
         },
 
         bind: function () {
@@ -63,13 +65,69 @@
         },
 
         initMetas: function () {
-            let $productMetas = this.$element.find('td.qor-product__meta');
+            let productMetas = this.$element.find('td.qor-product__meta');
 
-            _.each($productMetas, function (productMeta) {
-                this.productMetas.push($(productMeta).data('inputName'));
-            }.bind(this));
-
+            for (let i = 0, len = productMetas.length; i < len; i++) {
+                this.productMetas.push($(productMetas[i]).data('inputName'));
+            }
             this.setTemplate();
+        },
+
+        initPrimaryMeta: function () {
+            let primaryMeta = this.$element.find(CLASS_SELECT_TYPE),
+                collections = this.$element.find(CLASS_INIT_FIELDSET),
+                meta,
+                metaArr = [],
+                PrimaryInitMetaData = {};
+
+            for (let i = 0, len = primaryMeta.length; i < len; i++) {
+                meta = $(primaryMeta[i]).data('variant-type');
+
+                for (let j = 0, len2 = collections.length; j < len2; j++) {
+                    let $collection = $(collections[j]),
+                        $input = $collection.find(`[name$=${meta}]`).not('[type="hidden"]'),
+                        obj = {};
+
+                    if ($input.is('select')) {
+                        if ($input.val()) {
+                            obj[meta] = $input.find('option').text();
+                            obj.id = $input.val();
+                            metaArr.push(obj);
+                        } else {
+                            metaArr = [];
+                        }
+                    } else {
+                        // handle isn't select 
+                    }
+                }
+
+                metaArr.length && (PrimaryInitMetaData[`${meta}s`] = metaArr);
+            }
+
+            this.PrimaryInitMetaData = PrimaryInitMetaData;
+            this.initPrimarySelector();
+        },
+
+        initPrimarySelector: function () {
+            let data = this.PrimaryInitMetaData,
+                keys = Object.keys(data);
+
+            this.ingoreInitChange = true;
+
+            for (let i = 0, len = keys.length; i < len; i++) {
+                let key = keys[i].slice(0, -1),
+                    $select = $(`[data-variant-type="${key}"]`).find('.qor-field__input-selector'),
+                    obj = data[keys[i]];
+
+                for (let j = 0, len = obj.length; j < len; j++) {
+                    $select.append(`<option selected value='${obj[j].id}'>${obj[j][key]}</option>`);
+                }
+
+                $select.trigger('change');
+            }
+
+            this.ingoreInitChange = false;
+
         },
 
         removeSpace: function (value) {
@@ -95,6 +153,13 @@
                 variantValue = params.text || params.title || params.Name,
                 topValue = `${type}s`,
                 variantData = {};
+
+            if (this.ingoreInitChange) {
+                return false;
+            }
+
+            // if already have variants:
+            this.variants = this.PrimaryInitMetaData;
 
             this.variants[topValue] = this.variants[topValue] || [];
 
@@ -179,6 +244,39 @@
             this.doReplicator();
         },
 
+        doReplicator: function () {
+            let templateData = this.templateData,
+                lastTemplateData = this.lastTemplateData,
+                oldObj,
+                newObj = [];
+
+            this.$element.find(CLASS_VARIANT_FEILD).addClass(CLASS_REMOVE);
+
+            for (let i = 0, len = templateData.length; i < len; i++) {
+                let data = templateData[i];
+                oldObj = _.filter(lastTemplateData, function (lastData) {
+                    return _.isEqual(lastData, data);
+                });
+
+                if (oldObj.length) {
+                    let $oldID = $(`#${oldObj[0].variantID}`);
+                    if ($oldID.length) {
+                        $oldID.removeClass(CLASS_REMOVE);
+                    }
+                } else {
+                    newObj.push(data);
+                }
+            }
+
+            this.replicator = this.replicator || this.$element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
+            setTimeout(() => {
+                this.replicator.addReplicators(newObj, this.$replicatorBtn);
+            }, 500);
+
+            this.$element.find(`${CLASS_VARIANT_FEILD}.${CLASS_REMOVE}`).find('.qor-fieldset__delete').trigger('click');
+
+        },
+
         generateData: function (arrs) {
             let variantsKey = this.variantsKey,
                 variants = this.variants,
@@ -251,47 +349,13 @@
                 if ($input.is('select')) {
                     if ($input.data('remote-data')) {
                         idKey = `${keys[i]}s_ID`;
-                        $input.append(`<option value='${data.id || data[idKey]}'>${data[keys[i]]}</option>`).trigger('change');
+                        $input.append(`<option selected value='${data.id || data[idKey]}'>${data[keys[i]]}</option>`).trigger('change');
                     } else {
 
                         // not select
                     }
                 }
             }
-        },
-
-        doReplicator: function () {
-            let templateData = this.templateData,
-                lastTemplateData = this.lastTemplateData,
-                oldObj,
-                newObj = [];
-
-
-            this.$element.find(CLASS_VARIANT_FEILD).addClass(CLASS_REMOVE);
-
-            for (let i = 0, len = templateData.length; i < len; i++) {
-                let data = templateData[i];
-                oldObj = _.filter(lastTemplateData, function (lastData) {
-                    return _.isEqual(lastData, data);
-                });
-
-                if (oldObj.length) {
-                    let $oldID = $(`#${oldObj[0].variantID}`);
-                    if ($oldID.length) {
-                        $oldID.removeClass(CLASS_REMOVE);
-                    }
-                } else {
-                    newObj.push(data);
-                }
-            }
-
-            this.replicator = this.replicator || this.$element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
-            setTimeout(() => {
-                this.replicator.addReplicators(newObj, this.$replicatorBtn);
-            }, 500);
-
-            this.$element.find(`${CLASS_VARIANT_FEILD}.${CLASS_REMOVE}`).remove();
-
         },
 
         destroy: function () {
