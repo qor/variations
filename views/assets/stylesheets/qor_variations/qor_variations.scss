@@ -1,8 +1,26 @@
 .qor-product__table {
     table {
         width: 100%;
+        white-space: inherit;
+        th,
         td {
             padding: 8px;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        td ul a {
+            height: 48px;
+            line-height: 48px;
+            color: rgba(0, 0, 0, .87);
+            text-decoration: none;
+        }
+        td.normal {
+            padding: 0 !important;
+            text-align: left;
+            .qor-fieldset {
+                margin: 0;
+            }
         }
     }
 }

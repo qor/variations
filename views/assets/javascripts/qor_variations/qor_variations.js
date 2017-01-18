@@ -46,6 +46,7 @@
             this.PrimaryInitMetaData = {};
             this.productMetas = [];
             this.templateData = [];
+            this.primaryMeta = [];
             this.$tbody = $element.find(CLASS_TBODY);
             this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
             this.initMetas();
@@ -57,7 +58,10 @@
                 .on(EVENT_REPLICATOR_ADDED, this.addVariantReplicator.bind(this));
 
             this.$element
-                .on('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this));
+                .on('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this))
+                .on('click', '.qor-product__action', function () { return false; })
+                .on('click', '.qor-product__action--edit', this.editVariant.bind(this));
+
         },
 
         unbind: function () {
@@ -82,6 +86,8 @@
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
                 let metaArr = [],
                     meta = $(primaryMeta[i]).data('variant-type');
+
+                this.primaryMeta.push(meta);
 
                 for (let j = 0, len2 = collections.length; j < len2; j++) {
                     let $collection = $(collections[j]),
@@ -137,14 +143,54 @@
 
         setTemplate: function () {
             let productMetas = this.productMetas,
-                template = '<tr>';
+                templateStart = '<tr variants-id=[[variantID]]>',
+                templateEnd = `<td>
+                                <button id="qor-product-actions-for-[[index]]" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
+                                    <i class="material-icons">more_vert</i>
+                                </button>
+                                <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="qor-product-actions-for-[[index]]">
+                                    <li class="mdl-menu__item" qor-icon-name="Edit">
+                                        <a href="javascript://" class="qor-product__action--edit">Edit</a>
+                                    </li>
+                                </ul>
+                            </td></tr>`;
 
 
             _.each(productMetas, function (productMeta) {
-                template = `${template}<td>[[${productMeta}]]</td>`;
-            }.bind(this));
+                templateStart = `${templateStart}<td variant-data=${productMeta}>[[${productMeta}]]</td>`;
+            });
 
-            this.template = `${template}</tr>`;
+            this.template = `${templateStart}${templateEnd}`;
+        },
+
+        editVariant: function (e) {
+            let $tr = $(e.target).closest('tr'),
+                colspanLen = $tr.find('td').length,
+                variantID = $tr.attr('variants-id'),
+                inputName = $tr.find('td:first').data('inputName'),
+                $item,
+                $emptyCol = $(`<tr><td class="normal" colspan=${colspanLen}></td></tr>`);
+
+            if (inputName) {
+                $item = $(`[name="${inputName}"]`).not('[type="hidden"]').closest('.qor-fieldset');
+            } else if (variantID) {
+                $item = $(`#${variantID}`);
+            } else {
+                return false;
+            }
+
+            $tr.after($emptyCol);
+            $item.appendTo($emptyCol.find('td')).show().removeClass('hidden');
+            this.hidePrimaryMeta($item);
+        },
+
+        hidePrimaryMeta: function ($item) {
+            let primaryMeta = this.primaryMeta;
+
+            for (let i = 0, len = primaryMeta.length; i < len; i++) {
+                $item.find(`[name$=${primaryMeta[i]}]`).not('[type="hidden"]').closest('.qor-form-section').hide();
+            }
+
         },
 
         selectVariants: function (e) {
@@ -238,9 +284,13 @@
             $tbody.html('');
 
             for (let i = 0, len = templateData.length; i < len; i++) {
-                $tbody.append(window.Mustache.render(template, templateData[i]));
+                let data = {};
+                data = templateData[i];
+                data.index = (Math.random() + 1).toString(36).substring(7);
+                $tbody.append(window.Mustache.render(template, data));
             }
 
+            $tbody.trigger('enable');
             this.doReplicator();
         },
 
