@@ -16,10 +16,10 @@
     const _ = window._;
     const $document = $(document);
     const NAMESPACE = 'qor.product.variants';
-    const EVENT_ENABLE = 'enable.' + NAMESPACE;
-    const EVENT_DISABLE = 'disable.' + NAMESPACE;
     const NAME_REPLICATOR = 'qor.replicator';
-    const EVENT_REPLICATOR_ADDED = 'added.qor.replicator';
+    const EVENT_ENABLE = `enable.${NAMESPACE}`;
+    const EVENT_DISABLE = `disable.${NAMESPACE}`;
+    const EVENT_REPLICATOR_ADDED = `added.${NAME_REPLICATOR}`;
     const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
     const CLASS_SELECT_TYPE = '.qor-product__property-selector';
     const CLASS_TBODY = '.qor-product__table tbody';
@@ -65,7 +65,7 @@
         },
 
         initMetas: function () {
-            let productMetas = this.$element.find('td.qor-product__meta');
+            let productMetas = this.$element.find('.qor-product__meta');
 
             for (let i = 0, len = productMetas.length; i < len; i++) {
                 this.productMetas.push($(productMetas[i]).data('inputName'));
@@ -76,12 +76,12 @@
         initPrimaryMeta: function () {
             let primaryMeta = this.$element.find(CLASS_SELECT_TYPE),
                 collections = this.$element.find(CLASS_INIT_FIELDSET),
-                meta,
-                metaArr = [],
-                PrimaryInitMetaData = {};
+                PrimaryInitMetaData = {},
+                lastObj = {};
 
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
-                meta = $(primaryMeta[i]).data('variant-type');
+                let metaArr = [],
+                    meta = $(primaryMeta[i]).data('variant-type');
 
                 for (let j = 0, len2 = collections.length; j < len2; j++) {
                     let $collection = $(collections[j]),
@@ -92,13 +92,14 @@
                         if ($input.val()) {
                             obj[meta] = $input.find('option').text();
                             obj.id = $input.val();
-                            metaArr.push(obj);
-                        } else {
-                            metaArr = [];
+                            if (!_.isEqual(lastObj, obj)) {
+                                metaArr.push(obj);
+                            }
                         }
                     } else {
                         // handle isn't select 
                     }
+                    lastObj = obj;
                 }
 
                 metaArr.length && (PrimaryInitMetaData[`${meta}s`] = metaArr);
@@ -160,7 +161,6 @@
 
             // if already have variants:
             this.variants = this.PrimaryInitMetaData;
-
             this.variants[topValue] = this.variants[topValue] || [];
 
             if (isSelected) {
