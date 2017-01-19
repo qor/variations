@@ -30,12 +30,12 @@
               {{range $index, $value := $current_values}}
                 <tr>
                   {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}
-                    <td class="mdl-data-table__cell--non-numeric" data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">
+                    <td class="mdl-data-table__cell--non-numeric" data-variant-type="{{$meta.Name}}" data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">
                       {{formatted_value_of $value $meta}}
                     </td>
                   {{end}}
                   <td>
-                    <button id="qor-product-actions-for-{{$index}}" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
+                    <button type="button" id="qor-product-actions-for-{{$index}}" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
                       <i class="material-icons">more_vert</i>
                     </button>
                     <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="qor-product-actions-for-{{$index}}">

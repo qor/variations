@@ -2,6 +2,18 @@
     table {
         width: 100%;
         white-space: inherit;
+        tr {
+            &:not(.qor-variant__edit) {
+                td img {
+                    max-width: 48px;
+                    max-height: 48px;
+                    border: 1px solid rgba(0, 0, 0, .24);
+                }
+            }
+            &.qor-variant__edit:hover {
+                background-color: #fff;
+            }
+        }
         th,
         td {
             padding: 8px;
@@ -19,7 +31,7 @@
             padding: 0 !important;
             text-align: left;
             .qor-fieldset {
-                margin: 0;
+                margin: 8px;
             }
         }
     }

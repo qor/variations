@@ -19,16 +19,23 @@
     const NAME_REPLICATOR = 'qor.replicator';
     const EVENT_ENABLE = `enable.${NAMESPACE}`;
     const EVENT_DISABLE = `disable.${NAMESPACE}`;
+    const EVENT_CLICK = `click.${NAMESPACE}`;
+    const EVENT_KEYUP = `keyup.${NAMESPACE}`;
+    const EVENT_CHANGED_MEDIALIBRARY = 'changed.medialibrary';
     const EVENT_REPLICATOR_ADDED = `added.${NAME_REPLICATOR}`;
     const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
     const CLASS_SELECT_TYPE = '.qor-product__property-selector';
     const CLASS_TBODY = '.qor-product__table tbody';
     const CLASS_FIELDSET_CONTAINER = '.qor-product__container';
+    const CLASS_FIELDSET = '.qor-fieldset';
     const CLASS_BUTTON_ADD = '.qor-fieldset__add';
     const ID_VARIANTS_PRE = 'qor_variants_id_';
     const CLASS_REMOVE = 'should_remove';
     const CLASS_INIT_FIELDSET = '.qor-fieldset--init';
     const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new)';
+    const CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible';
+    const CLASS_MEDIALIBRARY_DATA = '.qor-field__mediabox-data';
+    const CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save';
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -59,9 +66,7 @@
 
             this.$element
                 .on('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this))
-                .on('click', '.qor-product__action', function () { return false; })
-                .on('click', '.qor-product__action--edit', this.editVariant.bind(this));
-
+                .on(EVENT_CLICK, '.qor-product__action--edit', this.editVariant.bind(this));
         },
 
         unbind: function () {
@@ -145,7 +150,7 @@
             let productMetas = this.productMetas,
                 templateStart = '<tr variants-id=[[variantID]]>',
                 templateEnd = `<td>
-                                <button id="qor-product-actions-for-[[index]]" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
+                                <button type="button" id="qor-product-actions-for-[[index]]" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
                                     <i class="material-icons">more_vert</i>
                                 </button>
                                 <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="qor-product-actions-for-[[index]]">
@@ -157,7 +162,7 @@
 
 
             _.each(productMetas, function (productMeta) {
-                templateStart = `${templateStart}<td variant-data=${productMeta}>[[${productMeta}]]</td>`;
+                templateStart = `${templateStart}<td data-variant-type=${productMeta}>[[${productMeta}]]</td>`;
             });
 
             this.template = `${templateStart}${templateEnd}`;
@@ -169,10 +174,10 @@
                 variantID = $tr.attr('variants-id'),
                 inputName = $tr.find('td:first').data('inputName'),
                 $item,
-                $emptyCol = $(`<tr><td class="normal" colspan=${colspanLen}></td></tr>`);
+                $emptyCol = $(`<tr class="qor-variant__edit"><td class="normal" colspan=${colspanLen}></td></tr>`);
 
             if (inputName) {
-                $item = $(`[name="${inputName}"]`).not('[type="hidden"]').closest('.qor-fieldset');
+                $item = $(`[name="${inputName}"]`).not('[type="hidden"]').closest(CLASS_FIELDSET);
             } else if (variantID) {
                 $item = $(`#${variantID}`);
             } else {
@@ -180,18 +185,63 @@
             }
 
             $tr.after($emptyCol);
-            $item.appendTo($emptyCol.find('td')).show().removeClass('hidden');
-            this.hidePrimaryMeta($item);
+            $item
+                .appendTo($emptyCol.find('td'))
+                .find(CLASS_MEDIALIBRARY_BUTTON).remove().end()
+                .append(`<button type="button" class="mdl-button mdl-js-button mdl-button--raised ${CLASS_MEDIALIBRARY_BUTTON.replace('.','')}">OK</button>`)
+                .show().removeClass('hidden')
+                .on(EVENT_KEYUP, CLASS_VISIBLE_RESOURCE_INPUT, this.syncCollectionToVariant.bind(this))
+                .on(EVENT_CLICK, CLASS_MEDIALIBRARY_BUTTON, this.saveCollevtionEdit.bind(this))
+                .on(EVENT_CHANGED_MEDIALIBRARY, CLASS_MEDIALIBRARY_DATA, this.syncCollectionToVariant.bind(this));
+
+            this.$editableVariant = $tr;
+            this.$editableCollection = $item;
+            this.hidePrimaryMeta();
         },
 
-        hidePrimaryMeta: function ($item) {
+        hidePrimaryMeta: function () {
             let primaryMeta = this.primaryMeta;
 
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
-                $item.find(`[name$=${primaryMeta[i]}]`).not('[type="hidden"]').closest('.qor-form-section').hide();
+                this.$editableCollection.find(`[name$=${primaryMeta[i]}]`).not('[type="hidden"]').closest('.qor-form-section').hide();
             }
 
         },
+
+        syncCollectionToVariant: function (e) {
+            let $target = $(e.target),
+                value = $target.val(),
+                variantType = $target.prop('name').match(/\.\w+/g),
+                $td,
+                url;
+
+            variantType = variantType[variantType.length - 1].replace('.', '');
+            $td = this.$editableVariant.find(`[data-variant-type="${variantType}"]`);
+
+            if ($target.is('textarea')) {
+                url = JSON.parse(value)[0].Url;
+                $td.html(`<img src="${url}"/>`);
+            } else {
+                $td.html(value);
+            }
+
+        },
+
+        saveCollevtionEdit: function (e) {
+            let $target = $(e.target),
+                $editableCollection = $target.closest(CLASS_FIELDSET),
+                $editableVariant = $editableCollection.closest('tr'),
+                $fieldBlock = this.$element.find('.qor-product__container>.qor-field__block');
+
+            $editableVariant.remove();
+            $editableCollection
+                .appendTo($fieldBlock)
+                .off(EVENT_KEYUP, CLASS_VISIBLE_RESOURCE_INPUT, this.syncCollectionToVariant.bind(this))
+                .off(EVENT_CLICK, CLASS_MEDIALIBRARY_BUTTON, this.saveCollevtionEdit.bind(this))
+                .off(EVENT_CHANGED_MEDIALIBRARY, CLASS_MEDIALIBRARY_DATA, this.syncCollectionToVariant.bind(this))
+                .hide();
+        },
+
 
         selectVariants: function (e) {
             let type = $(e.target).closest(CLASS_SELECT_TYPE).data('variant-type'),
