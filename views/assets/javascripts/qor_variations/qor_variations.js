@@ -56,6 +56,7 @@
             this.primaryMeta = [];
             this.$tbody = $element.find(CLASS_TBODY);
             this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
+            this.$fieldBlock = $element.find('.qor-product__container>.qor-field__block');
             this.initMetas();
             this.initPrimaryMeta();
         },
@@ -174,10 +175,16 @@
                 variantID = $tr.attr('variants-id'),
                 inputName = $tr.find('td:first').data('inputName'),
                 $item,
-                $emptyCol = $(`<tr class="qor-variant__edit"><td class="normal" colspan=${colspanLen}></td></tr>`);
+                randomID = (Math.random() + 1).toString(36).substring(7),
+                $emptyCol = $(`<tr class="qor-variant__edit"><td class="normal" colspan=${colspanLen}></td></tr>`),
+                buttonTemp = `<button type="button" class="mdl-button mdl-js-button mdl-button--raised ${CLASS_MEDIALIBRARY_BUTTON.replace('.','')}">OK</button>`;
+
+            if ($tr.next('tr.qor-variant__edit').length) {
+                return false;
+            }
 
             if (inputName) {
-                $item = $(`[name="${inputName}"]`).not('[type="hidden"]').closest(CLASS_FIELDSET);
+                $item = $(`[name="${inputName}"]`).not('[type="hidden"]').closest(CLASS_FIELDSET).attr('id', randomID);
             } else if (variantID) {
                 $item = $(`#${variantID}`);
             } else {
@@ -185,38 +192,39 @@
             }
 
             $tr.after($emptyCol);
+            !variantID && $tr.attr('variants-id', randomID);
+
             $item
                 .appendTo($emptyCol.find('td'))
                 .find(CLASS_MEDIALIBRARY_BUTTON).remove().end()
-                .append(`<button type="button" class="mdl-button mdl-js-button mdl-button--raised ${CLASS_MEDIALIBRARY_BUTTON.replace('.','')}">OK</button>`)
+                .append(buttonTemp)
                 .show().removeClass('hidden')
                 .on(EVENT_KEYUP, CLASS_VISIBLE_RESOURCE_INPUT, this.syncCollectionToVariant.bind(this))
                 .on(EVENT_CLICK, CLASS_MEDIALIBRARY_BUTTON, this.saveCollevtionEdit.bind(this))
                 .on(EVENT_CHANGED_MEDIALIBRARY, CLASS_MEDIALIBRARY_DATA, this.syncCollectionToVariant.bind(this));
 
-            this.$editableVariant = $tr;
-            this.$editableCollection = $item;
-            this.hidePrimaryMeta();
+            this.hidePrimaryMeta($item);
         },
 
-        hidePrimaryMeta: function () {
+        hidePrimaryMeta: function ($item) {
             let primaryMeta = this.primaryMeta;
-
+            // hide variant primary property
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
-                this.$editableCollection.find(`[name$=${primaryMeta[i]}]`).not('[type="hidden"]').closest('.qor-form-section').hide();
+                $item.find(`[name$=${primaryMeta[i]}]`).not('[type="hidden"]').closest('.qor-form-section').hide();
             }
-
         },
 
         syncCollectionToVariant: function (e) {
             let $target = $(e.target),
                 value = $target.val(),
+                collectionID = $target.closest(CLASS_FIELDSET).attr('id'),
+                $editableVariant = $(`tr[variants-id="${collectionID}"]`),
                 variantType = $target.prop('name').match(/\.\w+/g),
                 $td,
                 url;
 
             variantType = variantType[variantType.length - 1].replace('.', '');
-            $td = this.$editableVariant.find(`[data-variant-type="${variantType}"]`);
+            $td = $editableVariant.find(`[data-variant-type="${variantType}"]`);
 
             if ($target.is('textarea')) {
                 url = JSON.parse(value)[0].Url;
@@ -230,12 +238,11 @@
         saveCollevtionEdit: function (e) {
             let $target = $(e.target),
                 $editableCollection = $target.closest(CLASS_FIELDSET),
-                $editableVariant = $editableCollection.closest('tr'),
-                $fieldBlock = this.$element.find('.qor-product__container>.qor-field__block');
+                $editableVariant = $editableCollection.closest('tr');
 
             $editableVariant.remove();
             $editableCollection
-                .appendTo($fieldBlock)
+                .appendTo(this.$fieldBlock)
                 .off(EVENT_KEYUP, CLASS_VISIBLE_RESOURCE_INPUT, this.syncCollectionToVariant.bind(this))
                 .off(EVENT_CLICK, CLASS_MEDIALIBRARY_BUTTON, this.saveCollevtionEdit.bind(this))
                 .off(EVENT_CHANGED_MEDIALIBRARY, CLASS_MEDIALIBRARY_DATA, this.syncCollectionToVariant.bind(this))
@@ -329,10 +336,16 @@
         renderVariantsTable: function () {
             let $tbody = this.$tbody,
                 template = this.template,
-                templateData = this.templateData;
+                templateData = this.templateData,
+                $editableCollection = $tbody.find('.qor-variant__edit');
+
+            if ($editableCollection.length) {
+                $editableCollection.find(CLASS_FIELDSET).appendTo(this.$fieldBlock);
+            }
 
             $tbody.html('');
 
+            // TODO: keep old variant, not just fill tbody with new variant list
             for (let i = 0, len = templateData.length; i < len; i++) {
                 let data = {};
                 data = templateData[i];
