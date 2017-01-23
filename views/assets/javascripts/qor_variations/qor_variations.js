@@ -90,7 +90,8 @@
             let primaryMeta = this.$element.find(CLASS_SELECT_TYPE),
                 collections = this.$element.find(CLASS_INIT_FIELDSET),
                 PrimaryInitMetaData = {},
-                lastObj = {};
+                lastObj = [],
+                alreadyHaveMeta;
 
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
                 let metaArr = [],
@@ -108,7 +109,10 @@
                         if ($input.val()) {
                             obj[meta] = $input.find('option').html();
                             obj.id = $input.val();
-                            if (!_.isEqual(lastObj, obj)) {
+
+                            alreadyHaveMeta = this.checkSameObj(lastObj, obj);
+
+                            if (!alreadyHaveMeta) {
                                 metaArr.push(obj);
                             }
                             // add id for old variants, will keep old collection if already have collections;
@@ -120,7 +124,7 @@
                     } else {
                         // handle isn't select 
                     }
-                    lastObj = obj;
+                    lastObj.push(obj);
                 }
 
                 metaArr.length && (PrimaryInitMetaData[`${meta}s`] = metaArr);
@@ -181,6 +185,15 @@
 
         removeSpace: function (value) {
             return value.toString().replace(/\s/g, '');
+        },
+
+        checkSameObj: function (obj, target) {
+            let isSame;
+            isSame = obj.some(function (element) {
+                return _.isEqual(element, target);
+            });
+
+            return isSame;
         },
 
         collectObjectKeys: function (obj) {
@@ -562,16 +575,13 @@
     $(function () {
         let selector = '[data-toggle="qor.product.variants"]';
 
-        $(document)
-            .
+        $(document).
         on(EVENT_DISABLE, function (e) {
-                QorProductVariants.plugin.call($(selector, e.target), 'destroy');
-            })
-            .
+            QorProductVariants.plugin.call($(selector, e.target), 'destroy');
+        }).
         on(EVENT_ENABLE, function (e) {
-                QorProductVariants.plugin.call($(selector, e.target));
-            })
-            .
+            QorProductVariants.plugin.call($(selector, e.target));
+        }).
         triggerHandler(EVENT_ENABLE);
     });
 
