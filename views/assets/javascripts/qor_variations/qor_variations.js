@@ -28,6 +28,7 @@
     const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
     const CLASS_SELECT_TYPE = '.qor-product__property-selector';
     const CLASS_TBODY = '.qor-product__table tbody';
+    const CLASS_TR = '.qor-product__table tbody tr';
     const CLASS_FIELDSET_CONTAINER = '.qor-product__container';
     const CLASS_FIELDSET = '.qor-fieldset';
     const CLASS_BUTTON_ADD = '.qor-fieldset__add';
@@ -93,6 +94,10 @@
                 lastObj = [],
                 alreadyHaveMeta;
 
+            if (!collections.length) {
+                return;
+            }
+
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
                 let metaArr = [],
                     meta = $(primaryMeta[i]).data('variant-type');
@@ -134,7 +139,7 @@
             this.variantsKey = this.collectObjectKeys();
             this.handleTemplateData();
             this.initPrimarySelector();
-            this.setTableCollectionID(collections);
+            this.setCollectionID(collections);
         },
 
         initPrimarySelector: function () {
@@ -148,7 +153,7 @@
                     $select = $(`[data-variant-type="${key}"]`).find('.qor-field__input-selector'),
                     obj = data[keys[i]];
 
-                for (let j = 0, len = obj.length; j < len; j++) {
+                for (let j = 0, len2 = obj.length; j < len2; j++) {
                     $select.append(`<option selected value='${obj[j].id}'>${obj[j][key]}</option>`);
                 }
 
@@ -159,9 +164,9 @@
 
         },
 
-        setTableCollectionID: function (collections) {
-            // console.log(this.templateData);
-            let primaryMeta = this.primaryMeta;
+        setCollectionID: function (collections) {
+            let primaryMeta = this.primaryMeta,
+                initVariantData = [];
 
             for (let i = 0, len = collections.length; i < len; i++) {
                 let $collection = $(collections[i]),
@@ -178,9 +183,39 @@
 
                 objValues = _.values(obj).map(this.removeSpace);
                 variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
+                obj.variantID = variantID;
                 $collection.attr('id', variantID);
+                initVariantData.push(obj);
             }
 
+            this.setTableID(initVariantData);
+        },
+
+        setTableID: function (data) {
+            let primaryMeta = this.primaryMeta,
+                tr = this.$element.find(CLASS_TR),
+                targetObj;
+
+            for (let i = 0, len = tr.length; i < len; i++) {
+                let obj = {},
+                    $tr = $(tr[i]);
+
+                for (let j = 0, len2 = primaryMeta.length; j < len2; j++) {
+                    let key = primaryMeta[j],
+                        innerObj = {},
+                        value = $tr.find(`[data-variant-type="${key}"]`).text();
+
+                    if (value) {
+                        innerObj[key] = value;
+                        obj = Object.assign({}, obj, innerObj);
+                    } else {
+                        continue;
+                    }
+
+                }
+                targetObj = _.where(data, obj);
+                targetObj.length && $tr.attr('variants-id', targetObj[0].variantID);
+            }
         },
 
         removeSpace: function (value) {
@@ -210,7 +245,7 @@
         setTemplate: function () {
             let productMetas = this.productMetas,
                 templateStart = '<tr variants-id=[[variantID]]>',
-                templateEnd = `<td>
+                templateEnd = `<td class="mdl-data-table__cell--non-numeric">
                                 <button type="button" id="qor-product-actions-for-[[variantID]]" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
                                     <i class="material-icons">more_vert</i>
                                 </button>
@@ -233,9 +268,7 @@
             let $tr = $(e.target).closest('tr'),
                 colspanLen = $tr.find('td').length,
                 variantID = $tr.attr('variants-id'),
-                inputName = $tr.find('td:first').data('inputName'),
                 $item,
-                randomID = (Math.random() + 1).toString(36).substring(7),
                 $emptyCol = $(`<tr class="qor-variant__edit"><td class="normal" colspan=${colspanLen}></td></tr>`),
                 buttonTemp = `<button type="button" class="mdl-button mdl-js-button mdl-button--raised ${CLASS_MEDIALIBRARY_BUTTON.replace('.','')}">OK</button>`;
 
@@ -243,16 +276,13 @@
                 return false;
             }
 
-            if (inputName) {
-                $item = $(`[name="${inputName}"]`).not('[type="hidden"]').closest(CLASS_FIELDSET).attr('id', randomID);
-            } else if (variantID) {
+            if (variantID) {
                 $item = $(`#${variantID}`);
             } else {
                 return false;
             }
 
             $tr.after($emptyCol);
-            !variantID && $tr.attr('variants-id', randomID);
 
             $item
                 .appendTo($emptyCol.find('td'))
@@ -357,7 +387,6 @@
         convertVariantsData: function () {
             // store last template data to compare.
             this.lastTemplateData = this.templateData;
-            this.templateData = [];
             this.handleTemplateData();
             this.renderVariantsTable();
         },
@@ -366,6 +395,8 @@
             let maxIndices = [],
                 variantsKey = this.variantsKey,
                 variants = this.variants;
+
+            this.templateData = [];
 
             _.each(variantsKey, function (key) {
                 maxIndices.push(variants[key].length);
@@ -394,52 +425,32 @@
         renderVariantsTable: function () {
             let $tbody = this.$tbody,
                 template = this.template,
-                templateData = this.templateData,
+                newObj = this.checkTemplateData(),
                 $editableCollection = $tbody.find('.qor-variant__edit');
 
             if ($editableCollection.length) {
                 $editableCollection.find(CLASS_FIELDSET).appendTo(this.$fieldBlock);
             }
 
-            $tbody.html('');
+            // $tbody.html('');
+
+            // console.log(newObj);
 
             // TODO: keep old variant, not just fill tbody with new variant list
-            for (let i = 0, len = templateData.length; i < len; i++) {
+            for (let i = 0, len = newObj.length; i < len; i++) {
                 let data = {};
-                data = templateData[i];
+                data = newObj[i];
                 $tbody.append(window.Mustache.render(template, data));
             }
+
+            this.$element.find(`${CLASS_TR}.${CLASS_REMOVE}`).remove();
 
             $tbody.trigger('enable');
             this.doReplicator();
         },
 
         doReplicator: function () {
-            let templateData = this.templateData,
-                lastTemplateData = this.lastTemplateData,
-                newObj = [];
-
-            this.$element.find(CLASS_VARIANT_FEILD).addClass(CLASS_REMOVE);
-
-            for (let i = 0, len = templateData.length; i < len; i++) {
-                let data = templateData[i],
-                    oldObj = [];
-
-                if (lastTemplateData) {
-                    oldObj = _.filter(lastTemplateData, function (lastData) {
-                        return _.isEqual(lastData, data);
-                    });
-                }
-
-                if (oldObj.length) {
-                    let $oldID = $(`#${oldObj[0].variantID}`);
-                    if ($oldID.length) {
-                        $oldID.removeClass(CLASS_REMOVE);
-                    }
-                } else {
-                    newObj.push(data);
-                }
-            }
+            let newObj = this.checkTemplateData();
 
             // TODO: add loading
             // this.addLoading();
@@ -449,7 +460,45 @@
             }, 500);
 
             this.$element.find(`${CLASS_VARIANT_FEILD}.${CLASS_REMOVE}`).find('.qor-fieldset__delete').trigger('click').hide();
+        },
 
+        checkTemplateData: function () {
+            let templateData = this.templateData,
+                lastTemplateData = this.lastTemplateData,
+                newObj = [];
+
+            // console.log('lastTemplateData');
+            // console.log(templateData);
+
+            this.$element.find(CLASS_VARIANT_FEILD).addClass(CLASS_REMOVE).find(CLASS_TR).addClass(CLASS_REMOVE);
+
+            for (let i = 0, len = templateData.length; i < len; i++) {
+                let data = templateData[i],
+                    oldObj = [];
+
+                if (lastTemplateData.length) {
+                    oldObj = _.filter(lastTemplateData, function (lastData) {
+                        return _.isEqual(lastData, data);
+                    });
+                }
+
+
+                if (oldObj.length) {
+                    let $oldID = $(`#${oldObj[0].variantID}`),
+                        $oldTableID = $(`tr[variants-id="${oldObj[0].variantID}"]`);
+
+                    if ($oldID.length) {
+                        $oldID.removeClass(CLASS_REMOVE);
+                    }
+                    if ($oldTableID.length) {
+                        $oldTableID.removeClass(CLASS_REMOVE);
+                    }
+                } else {
+                    newObj.push(data);
+                }
+            }
+
+            return newObj;
         },
 
         generateData: function (arrs) {
