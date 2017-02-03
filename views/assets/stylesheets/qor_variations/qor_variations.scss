@@ -3,6 +3,9 @@
         width: 100%;
         white-space: inherit;
         tr {
+            &.is_current {
+                border-left: 2px solid #03a9f4;
+            }
             &:not(.qor-variant__edit) {
                 td img {
                     max-width: 48px;
@@ -31,7 +34,8 @@
             padding: 0 !important;
             text-align: left;
             .qor-fieldset {
-                margin: 8px;
+                margin: 0;
+                border: 0;
             }
         }
     }

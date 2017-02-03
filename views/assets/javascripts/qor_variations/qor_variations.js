@@ -35,6 +35,7 @@
     const ID_VARIANTS_PRE = 'qor_variants_id_';
     const CLASS_SHOULD_REMOVE = 'should_remove';
     const CLASS_IS_REMOVE = 'is_removed';
+    const CLASS_IS_CURRENT = 'is_current';
     const CLASS_INIT_FIELDSET = '.qor-fieldset--init';
     const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new)';
     const CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible';
@@ -191,7 +192,7 @@
                     }
                 }
 
-                objValues = _.values(obj).map(this.removeSpace);
+                objValues = _.values(obj).map(this.removeSpace).sort();
                 variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
                 obj.variantID = variantID;
                 $collection.attr('id', variantID);
@@ -292,7 +293,7 @@
                 return false;
             }
 
-            $tr.after($emptyCol);
+            $tr.addClass(CLASS_IS_CURRENT).after($emptyCol);
 
             $item
                 .appendTo($emptyCol.find('td'))
@@ -340,7 +341,7 @@
                 $editableCollection = $target.closest(CLASS_FIELDSET),
                 $editableVariant = $editableCollection.closest('tr');
 
-            $editableVariant.remove();
+            $editableVariant.prev().removeClass(CLASS_IS_CURRENT).end().remove();
             $editableCollection
                 .appendTo(this.$fieldBlock)
                 .off(EVENT_KEYUP, CLASS_VISIBLE_RESOURCE_INPUT, this.syncCollectionToVariant.bind(this))
@@ -370,30 +371,46 @@
                 this.variants[topType].push(variantData);
                 this.renderVariants();
             } else {
+                // TODO: if no variants meta selected, should hide all.
                 variantData = this.variants[topType].filter(function (item) {
                     return item[type] != variantValue;
                 });
                 this.variants[topType] = variantData;
-                this.removeVariants(variantValue, params.id);
+                this.removeVariants(variantValue, params.id, type);
                 this.handleTemplateData();
             }
         },
 
-        removeVariants: function (value, id) {
-            let variantValue = `${id}_${value.replace(/\s/g, '')}`,
-                $trs = this.$tbody.find(`tr[variants-id*="${variantValue}"]`),
-                $collections = this.$element.find(`fieldset[id*="${variantValue}"]`),
-                hiddenTRs;
+        removeVariants: function (value, id, type) {
+            let templateDatas = this.templateData,
+                data = {};
 
-            $trs.hide().addClass(CLASS_IS_REMOVE);
-            $collections.find('.qor-fieldset__delete').trigger('click').hide().addClass(CLASS_IS_REMOVE);
+            data[type] = value;
+            data[`${type}s_ID`] = id;
 
-            hiddenTRs = this.$tbody.find(`.${CLASS_IS_REMOVE}`);
             this.hiddenVariantsID = [];
 
-            for (let i = 0, len = hiddenTRs.length; i < len; i++) {
-                this.hiddenVariantsID.push($(hiddenTRs[i]).attr('variants-id'));
+            for (let i = 0, len = templateDatas.length; i < len; i++) {
+                let templateData = templateDatas[i],
+                    variantID;
+
+                if (_.isMatch(templateData, data)) {
+                    variantID = templateData.variantID;
+                    this.hideRemovedVariants(variantID);
+                    this.hiddenVariantsID.push(variantID);
+                } else {
+                    continue;
+                }
+
             }
+        },
+
+        hideRemovedVariants: function (id) {
+            let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
+                $collection = this.$element.find(`fieldset#${id}`);
+
+            $tr.hide().addClass(CLASS_IS_REMOVE);
+            $collection.find('.qor-fieldset__delete').trigger('click').hide().addClass(CLASS_IS_REMOVE);
         },
 
         renderVariants: function () {
@@ -436,11 +453,13 @@
                     let item = variant[i],
                         key = _.keys(item)[0],
                         value = item[key],
+                        objValues,
                         obj = {};
 
                     obj[key] = value;
                     obj.id = item.id;
-                    obj.variantID = `${ID_VARIANTS_PRE}${value.replace(/\s/g, '')}`;
+                    objValues = _.values(obj).map(this.removeSpace).sort();
+                    obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
                     this.templateData.push(obj);
                 }
 
@@ -476,13 +495,11 @@
 
         checkTemplateData: function () {
             let templateData = this.templateData,
-                // lastTemplateData = this.lastTemplateData,
-                hiddenVariantsID = this.hiddenVariantsID,
+                hiddenVariantsID = this.hiddenVariantsID || [],
                 newObjs = [],
                 oldObjs = [];
 
             this.collectExistVariantsID();
-
             this.$element.find(CLASS_VARIANT_FEILD).addClass(CLASS_SHOULD_REMOVE).end().find(CLASS_TR).addClass(CLASS_SHOULD_REMOVE);
 
             for (let i = 0, len = templateData.length; i < len; i++) {
@@ -549,7 +566,7 @@
             //obj will be:
             //Color: {"Color": "White",Colors_ID: 3,Size: "M",Sizes_ID: 2,variantID: "qor_variants_id_3_White_2_M"}
 
-            objValues = _.values(obj).map(this.removeSpace);
+            objValues = _.values(obj).map(this.removeSpace).sort();
             obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
             this.templateData.push(obj);
         },
