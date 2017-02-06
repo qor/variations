@@ -28,6 +28,7 @@
     const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
     const CLASS_SELECT_TYPE = '.qor-product__property-selector';
     const CLASS_TBODY = '.qor-product__table tbody';
+    const CLASS_TABLE = '.qor-product__table table';
     const CLASS_TR = '.qor-product__table tbody tr';
     const CLASS_FIELDSET_CONTAINER = '.qor-product__container';
     const CLASS_FIELDSET = '.qor-fieldset';
@@ -74,7 +75,8 @@
 
             this.$element
                 .on('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this))
-                .on(EVENT_CLICK, '.qor-product__action--edit', this.editVariant.bind(this));
+                .on(EVENT_CLICK, '.qor-product__action--edit', this.editVariant.bind(this))
+                .on(EVENT_CLICK, '.qor-product__action--delete', this.deleteVariant.bind(this));
         },
 
         unbind: function () {
@@ -264,6 +266,9 @@
                                     <li class="mdl-menu__item" qor-icon-name="Edit">
                                         <a href="javascript://" class="qor-product__action--edit">Edit</a>
                                     </li>
+                                    <li class="mdl-menu__item" qor-icon-name="Delete">
+                                        <a href="javascript://" class="qor-product__action--delete">Delete</a>
+                                    </li>
                                 </ul>
                             </td></tr>`;
 
@@ -273,6 +278,13 @@
             });
 
             this.template = `${templateStart}${templateEnd}`;
+        },
+
+        deleteVariant: function (e) {
+            let id = $(e.target).closest('tr').attr('variants-id');
+
+            this.hideRemovedVariants(id);
+            this.hiddenVariantsID.push(id);
         },
 
         editVariant: function (e) {
@@ -309,7 +321,6 @@
 
         hidePrimaryMeta: function ($item) {
             let primaryMeta = this.primaryMeta;
-            console.log(primaryMeta);
             // hide variant primary property
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
                 $item.find(`[name$=${primaryMeta[i]}]`).not('[type="hidden"]').closest('.qor-form-section').hide();
@@ -411,7 +422,11 @@
                 $collection = this.$element.find(`fieldset#${id}`);
 
             $tr.hide().addClass(CLASS_IS_REMOVE);
-            $collection.find('.qor-fieldset__delete').trigger('click').hide().addClass(CLASS_IS_REMOVE);
+            $collection
+                .addClass(CLASS_IS_REMOVE)
+                .find('.qor-fieldset__alert').remove().end()
+                .find('.qor-fieldset__delete').trigger('click').hide();
+
         },
 
         renderVariants: function () {
@@ -470,13 +485,19 @@
         },
 
         renderVariantsTable: function () {
-            let $tbody = this.$tbody,
-                newObjs = this.checkTemplateData().newObjs;
+            let $table = this.$element.find(CLASS_TABLE),
+                newObjs;
 
+
+            $table
+                .removeClass('is-upgraded').removeAttr('data-upgraded')
+                .find('tr td:first-child,tr th:first-child').remove();
+
+            newObjs = this.checkTemplateData().newObjs;
             this.$element.find(`${CLASS_TR}.${CLASS_SHOULD_REMOVE}`).hide();
 
             if (newObjs.length) {
-                $tbody.trigger('enable');
+                $table.trigger('enable');
                 this.doReplicator(newObjs);
             }
         },

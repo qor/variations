@@ -18,7 +18,7 @@
   <div class="qor-fieldset-container qor-product__container">
     <div class="qor-field__block">
       <div class="qor-product__table">
-        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+        <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
           <thead>
             {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}
               <th class="qor-product__meta mdl-data-table__cell--non-numeric" data-input-name="{{$meta.Name}}">{{meta_label $meta}}</th>
@@ -39,6 +39,9 @@
                     <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="qor-product-actions-for-{{$index}}">
                       <li class="mdl-menu__item" qor-icon-name="Edit">
                         <a href="javascript://" class="qor-product__action--edit">Edit</a>
+                      </li>
+                      <li class="mdl-menu__item" qor-icon-name="Delete">
+                        <a href="javascript://" class="qor-product__action--delete">Delete</a>
                       </li>
                     </ul>
                   </td>
