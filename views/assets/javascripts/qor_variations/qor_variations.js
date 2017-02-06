@@ -105,15 +105,15 @@
                 lastObj = [],
                 alreadyHaveMeta;
 
-            if (!collections.length) {
-                return;
-            }
-
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
                 let metaArr = [],
                     meta = $(primaryMeta[i]).data('variant-type');
 
                 this.primaryMeta.push(meta);
+
+                if (!collections.length) {
+                    continue;
+                }
 
                 for (let j = 0, len2 = collections.length; j < len2; j++) {
                     let $collection = $(collections[j]),
@@ -309,6 +309,7 @@
 
         hidePrimaryMeta: function ($item) {
             let primaryMeta = this.primaryMeta;
+            console.log(primaryMeta);
             // hide variant primary property
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
                 $item.find(`[name$=${primaryMeta[i]}]`).not('[type="hidden"]').closest('.qor-form-section').hide();
