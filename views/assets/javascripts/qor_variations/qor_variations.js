@@ -42,6 +42,7 @@
     const CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible';
     const CLASS_MEDIALIBRARY_DATA = '.qor-field__mediabox-data';
     const CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save';
+    const CLASS_FILTER = '.qor-product__filter-options';
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -61,6 +62,7 @@
             this.templateData = [];
             this.primaryMeta = [];
             this.existVariantsID = [];
+            this.primaryMetaValue = [];
             this.$tbody = $element.find(CLASS_TBODY);
             this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
             this.$fieldBlock = $element.find('.qor-product__container>.qor-field__block');
@@ -76,11 +78,12 @@
             this.$element
                 .on('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this))
                 .on(EVENT_CLICK, '.qor-product__action--edit', this.editVariant.bind(this))
-                .on(EVENT_CLICK, '.qor-product__action--delete', this.deleteVariant.bind(this));
+                .on(EVENT_CLICK, '.qor-product__action--delete', this.deleteVariant.bind(this))
+                .on(EVENT_CLICK, '.qor-product__filter a', this.filterVariant.bind(this));
         },
 
         unbind: function () {
-            // this.$element
+            // TODO
         },
 
         initMetas: function () {
@@ -125,13 +128,15 @@
 
                     if ($input.is('select')) {
                         if ($input.val()) {
-                            obj[meta] = $input.find('option').html();
+                            let value = $input.find('option').html();
+                            obj[meta] = value;
                             obj.id = $input.val();
 
                             alreadyHaveMeta = this.checkSameObj(lastObj, obj);
 
                             if (!alreadyHaveMeta) {
                                 metaArr.push(obj);
+                                this.primaryMetaValue.push({ 'type': value });
                             }
                             // add id for old variants, will keep old collection if already have collections;
                             elementObj[`${meta}_ID`] = obj.id;
@@ -152,6 +157,7 @@
             this.variantsKey = this.collectObjectKeys();
             this.handleTemplateData();
             this.initPrimarySelector();
+            this.primaryMetaValue.length && this.initFilter();
             this.setCollectionID(collections);
         },
 
@@ -177,6 +183,44 @@
 
         },
 
+        initFilter: function () {
+            let primaryMetaValue = this.primaryMetaValue,
+                $filter = this.$element.find(CLASS_FILTER);
+
+            $filter.html('');
+
+            for (let i = 0, len = primaryMetaValue.length; i < len; i++) {
+                $filter.append(window.Mustache.render(QorProductVariants.TEMPLATE_FILTER, primaryMetaValue[i]));
+            }
+        },
+
+        filterVariant: function (e) {
+            let $filter = $(e.target),
+                type = $filter.data('filter-type'),
+                $table = this.$element.find(CLASS_TABLE),
+                $selectedVariants = $table.find('td input.mdl-checkbox__input:checked'),
+                unselectVariants = function () {
+                    if ($selectedVariants.length) {
+                        $selectedVariants.closest('label.mdl-checkbox').trigger('click');
+                        $table.find('th label.mdl-checkbox').removeClass('is-checked').find('.mdl-checkbox__input').prop('checked', false);
+                    }
+                };
+
+            switch (type) {
+            case 'all':
+                $table.find('th label.mdl-checkbox').trigger('click');
+                break;
+            case 'none':
+                unselectVariants();
+                break;
+            default:
+                unselectVariants();
+                this.$tbody.find(`tr[variants-id*="_${this.removeSpace(type)}_"] label.mdl-checkbox`).trigger('click');
+                break;
+            }
+
+        },
+
         setCollectionID: function (collections) {
             let primaryMeta = this.primaryMeta,
                 initVariantData = [];
@@ -195,7 +239,7 @@
                 }
 
                 objValues = _.values(obj).map(this.removeSpace).sort();
-                variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
+                variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}_`;
                 obj.variantID = variantID;
                 $collection.attr('id', variantID);
                 initVariantData.push(obj);
@@ -367,8 +411,8 @@
                 params = e.params.data,
                 isSelected = params.selected,
                 variantValue = params.text || params.title || params.Name,
-                topType = `${type}s`,
-                variantData = {};
+                id = params.id,
+                topType = `${type}s`;
 
             if (this.ingoreInitChange) {
                 return false;
@@ -378,24 +422,42 @@
             this.variants[topType] = this.variants[topType] || [];
 
             if (isSelected) {
-                variantData[type] = variantValue;
-                variantData.id = params.id.toString();
-                this.variants[topType].push(variantData);
-                this.renderVariants();
+                this.doSelelct(variantValue, topType, type, id);
             } else {
-                // TODO: if no variants meta selected, should hide all.
-                variantData = this.variants[topType].filter(function (item) {
-                    return item[type] != variantValue;
-                });
-                this.variants[topType] = variantData;
-                this.removeVariants(variantValue, params.id, type);
-                this.handleTemplateData();
+                this.doUnselelct(variantValue, topType, type, id);
             }
+            this.initFilter();
+        },
+
+        doUnselelct: function (variantValue, topType, type, id) {
+            // TODO: if no variants meta selected, should hide all.
+            this.variants[topType] = this.variants[topType].filter(function (item) {
+                return item[type] != variantValue;
+            });
+            this.removeVariants(variantValue, id, type);
+            this.handleTemplateData();
+            this.primaryMetaValue = _.reject(this.primaryMetaValue, function (obj) {
+                return _.isEqual(obj, { 'type': variantValue });
+            });
+        },
+
+        doSelelct: function (variantValue, topType, type, id) {
+            let variantData = {};
+            variantData[type] = variantValue;
+            variantData.id = id.toString();
+            this.variants[topType].push(variantData);
+            this.renderVariants();
+            this.primaryMetaValue.push({ 'type': variantValue });
         },
 
         removeVariants: function (value, id, type) {
             let templateDatas = this.templateData,
                 data = {};
+
+            // TODO: BUG
+            // if meta only have 1 value, remove this, should not hide all variants:
+            // if have 2 colors, 2 size, 1 material, remove material value, will remove all variants right now. should 
+            // rerender variants.
 
             data[type] = value;
             data[`${type}s_ID`] = id;
@@ -455,7 +517,6 @@
                 variantsKey = this.variantsKey,
                 variants = this.variants;
 
-            // this.lastTemplateData = this.templateData;
             this.templateData = [];
 
             _.each(variantsKey, function (key) {
@@ -475,7 +536,7 @@
                     obj[key] = value;
                     obj.id = item.id;
                     objValues = _.values(obj).map(this.removeSpace).sort();
-                    obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
+                    obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}_`;
                     this.templateData.push(obj);
                 }
 
@@ -589,7 +650,7 @@
             //Color: {"Color": "White",Colors_ID: 3,Size: "M",Sizes_ID: 2,variantID: "qor_variants_id_3_White_2_M"}
 
             objValues = _.values(obj).map(this.removeSpace).sort();
-            obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}`;
+            obj.variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}_`;
             this.templateData.push(obj);
         },
 
@@ -654,6 +715,8 @@
             this.$element.removeData(NAMESPACE);
         }
     };
+
+    QorProductVariants.TEMPLATE_FILTER = `<li><a href="javascript://" data-filter-type="[[type]]">[[type]]</a></li>`;
 
     QorProductVariants.TEMPLATE_LOADING = (
         `<div class="qor-product__loading">
