@@ -19,13 +19,17 @@
     <div class="qor-field__block">
       <div class="qor-product__filter">
         <h4>{{t "qor_admin.variantion.filter.title.Select" "Select"}}</h4>
-        <ul>
+        <ul class="qor-product__filter-base">
           <li><a href="javascript://" data-filter-type="all">All</a></li>
           <li><a href="javascript://" data-filter-type="none">None</a></li>
         </ul>
         <ul class="qor-product__filter-options">
         </ul>
-
+        <div class="qor-product__filter-actions" style="display:none;">
+          <span><em>1</em> variants selected</span>
+          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__edit">Bulk Edit</button>
+          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__delete">Delete selected variants</button>
+        </div>
       </div>
       <div class="qor-product__table">
         <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
@@ -74,6 +78,8 @@
       {{end}}
 
       {{if has_create_permission .Meta}}
+
+
         <fieldset class="qor-fieldset qor-fieldset--new">
           <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
             <i class="material-icons md-18">delete</i>

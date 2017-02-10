@@ -7,7 +7,8 @@
         margin-bottom: 8px;
         ul,
         h4,
-        li {
+        .qor-product__filter-base li,
+        .qor-product__filter-options li {
             margin: 0;
             display: inline-block;
             vertical-align: middle;
@@ -15,12 +16,56 @@
             padding: 0;
         }
         h4,
-        li {
+        .qor-product__filter-base li,
+        .qor-product__filter-options li {
             font-size: 12px;
             margin: 0 8px 0 0;
         }
     }
+    .qor-product__filter-actions {
+        position: absolute;
+        background-color: #f5f5f5;
+        top: 40px;
+        left: 42px;
+        z-index: 20;
+        right: 2px;
+        em {
+            font-style: normal;
+        }
+        button {
+            font-size: 12px;
+            color: rgb(3, 169, 244);
+        }
+    }
     .qor-product__table {
+        .qor-variants__edit {
+            td {
+                border-left: 2px solid #03a9f4;
+            }
+            fieldset {
+                padding-left: 60px;
+            }
+            .qor-product-icon {
+                margin-left: -45px;
+                position: absolute;
+                cursor: pointer;
+                .normal {
+                    color: rgba(0, 0, 0, .24);
+                }
+                .selected {
+                    display: none;
+                    color: #03a9f4;
+                }
+                &.selected {
+                    .selected {
+                        display: block;
+                    }
+                    .normal {
+                        display: none;
+                    }
+                }
+            }
+        }
         table {
             width: 100%;
             white-space: inherit;
@@ -39,12 +84,16 @@
                     background-color: #fff;
                 }
             }
+            th:first-of-type {
+                width: 50px;
+            }
             th,
             td {
                 padding: 8px;
             }
             th {
                 background-color: #f5f5f5;
+                padding: 0 8px 11px;
             }
             td ul a {
                 height: 48px;
