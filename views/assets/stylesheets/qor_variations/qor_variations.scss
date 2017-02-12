@@ -44,6 +44,11 @@
             }
             fieldset {
                 padding-left: 60px;
+                >h2 {
+                    font-size: 20px;
+                    margin: 0;
+                    font-weight: 500;
+                }
             }
             .qor-product-icon {
                 margin-left: -45px;
@@ -69,6 +74,7 @@
         table {
             width: 100%;
             white-space: inherit;
+            margin: 0;
             tr {
                 &.is_current {
                     border-left: 2px solid #03a9f4;

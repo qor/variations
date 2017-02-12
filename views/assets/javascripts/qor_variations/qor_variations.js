@@ -82,7 +82,8 @@
                 .on(EVENT_CLICK, '.qor-product__action--edit', this.editVariant.bind(this))
                 .on(EVENT_CLICK, '.qor-product__action--delete', this.deleteVariant.bind(this))
                 .on(EVENT_CLICK, '.qor-product__filter a', this.filterVariant.bind(this))
-                .on(EVENT_CLICK, '.qor-product__filter-actions__edit', this.bulkEditVariants.bind(this));
+                .on(EVENT_CLICK, '.qor-product__filter-actions__edit', this.bulkEditVariants.bind(this))
+                .on(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
         },
 
         unbind: function () {
@@ -222,7 +223,12 @@
                 break;
             }
 
+            $table.find('label.mdl-checkbox').removeClass('is-focused');
             this.showVariantToolbar();
+        },
+
+        showBulkEditVariantToolbar: function () {
+            setTimeout(this.showVariantToolbar.bind(this), 1);
         },
 
         showVariantToolbar: function () {
@@ -247,9 +253,14 @@
         bulkEditVariants: function () {
             let $form = this.initBulkVariantsForm(),
                 $tr = this.$tbody.find('tr:first'),
+                $editForm = this.$element.find('.qor-variants__edit'),
                 colspanLen = $tr.find('td').length,
                 $emptyCol = $(`<tr class="qor-variants__edit"><td class="normal" colspan=${colspanLen}></td></tr>`),
                 buttonTemp = `<button type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored ${CLASS_MEDIALIBRARY_BULK_BUTTON.replace('.','')}">Save</button>`;
+
+            if ($editForm.length) {
+                return false;
+            }
 
             $tr.before($emptyCol);
 
@@ -279,13 +290,20 @@
             }
 
             $checkedFeild.each(function () {
-                let $input = $(this).parent().find(CLASS_VISIBLE_RESOURCE_INPUT),
+                let $input = $(this).parent().find(`${CLASS_VISIBLE_RESOURCE_INPUT},${CLASS_MEDIALIBRARY_DATA}`),
                     data = {};
 
-                data.name = $input.prop('name').match(/\.\w+$/g)[0].replace('.', '');
-                data.value = $input.val();
+                if ($input.length) {
+                    if ($input.is(CLASS_MEDIALIBRARY_DATA)) {
+                        data.isImage = true;
+                    } else {
+                        data.isImage = false;
+                    }
+                    data.name = $input.prop('name').match(/\.\w+$/g)[0].replace('.', '');
+                    data.value = $input.val();
+                    bulkData.push(data);
+                }
 
-                bulkData.push(data);
             });
 
             this.syncBulkEditValue(bulkData);
@@ -297,10 +315,24 @@
 
             for (let i = 0, len = selectedVariantsID.length; i < len; i++) {
                 for (let j = 0, len2 = data.length; j < len2; j++) {
-                    $element.find(`#${selectedVariantsID[i]}`).find(`[name$=${data[j].name}]`).not('[type="hidden"]').val(data[j].value);
-                    this.$tbody.find(`tr.is-selected td[data-variant-type="${data[j].name}"]`).html(data[j].value);
+                    let name = data[j].name,
+                        value = data[j].value,
+                        url,
+                        $td = this.$tbody.find(`tr.is-selected td[data-variant-type="${name}"]`);
+
+                    if (data[j].isImage) {
+                        url = JSON.parse(value)[0].Url;
+                        $td.html(`<img src="${url}"/>`);
+                    } else {
+                        $td.html(value);
+                    }
+
+                    $element.find(`#${selectedVariantsID[i]}`).find(`[name$=${name}]`).not('[type="hidden"]').val(value);
+
                 }
             }
+
+            this.$element.find('.qor-variants__edit').remove();
 
         },
 
@@ -316,6 +348,7 @@
 
             $form.find('.qor-form-section .qor-field').prepend('<span class="qor-product-icon"><i class="material-icons normal">panorama_fish_eye</i><i class="material-icons selected">check_circle</i></span>');
             $form.find('.qor-fieldset__delete').remove();
+            $form.prepend('<h2>Bulk Edit</h2>');
 
             return $form;
         },
