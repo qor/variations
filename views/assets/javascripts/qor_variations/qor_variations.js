@@ -83,6 +83,7 @@
                 .on(EVENT_CLICK, '.qor-product__action--delete', this.deleteVariant.bind(this))
                 .on(EVENT_CLICK, '.qor-product__filter a', this.filterVariant.bind(this))
                 .on(EVENT_CLICK, '.qor-product__filter-actions__edit', this.bulkEditVariants.bind(this))
+                .on(EVENT_CLICK, '.qor-product__filter-actions__delete', this.bulkDeleteVariants.bind(this))
                 .on(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
         },
 
@@ -334,6 +335,20 @@
 
             this.$element.find('.qor-variants__edit').remove();
 
+        },
+
+        bulkDeleteVariants: function () {
+            let trs = this.$tbody.find('tr.is-selected');
+
+            trs.hide().addClass('is_removed');
+            for (let i = 0, len = trs.length; i < len; i++) {
+                let id = $(trs[i]).attr('variants-id');
+                this.$element.find(`#${id}`).find('.qor-fieldset__delete').click();
+            }
+
+            this.$element.find('.qor-product__filter-actions').hide();
+
+            return false;
         },
 
         initBulkVariantsForm: function () {
