@@ -609,16 +609,19 @@
         },
 
         selectVariants: function (e) {
-            let type = $(e.target).closest(CLASS_SELECT_TYPE).data('variant-type'),
+            let $parent = $(e.target).closest(CLASS_SELECT_TYPE),
+                type = $parent.data('variant-type'),
                 params = e.params.data,
                 isSelected = params.selected,
                 variantValue = params.text || params.title || params.Name,
                 id = params.id,
-                topType = `${type}s`;
+                topType = `${type}s`,
+                isLastOne = !$parent.find('.select2-selection__choice').length;
 
             if (this.ingoreInitChange) {
                 return false;
             }
+
 
             // if already have variants:
             this.variants[topType] = this.variants[topType] || [];
@@ -626,18 +629,25 @@
             if (isSelected) {
                 this.doSelelct(variantValue, topType, type, id);
             } else {
-                this.doUnselelct(variantValue, topType, type, id);
+                this.doUnselelct(variantValue, topType, type, id, isLastOne);
             }
             this.initFilter();
         },
 
-        doUnselelct: function (variantValue, topType, type, id) {
+        doUnselelct: function (variantValue, topType, type, id, isLastOne) {
             // TODO: if no variants meta selected, should hide all.
             this.variants[topType] = this.variants[topType].filter(function (item) {
                 return item[type] != variantValue;
             });
+
             this.removeVariants(variantValue, id, type);
-            this.handleTemplateData();
+
+            if (isLastOne) {
+                this.renderVariants();
+            } else {
+                this.handleTemplateData();
+            }
+
             // for bulk edit selector
             this.primaryMetaValue = _.reject(this.primaryMetaValue, function (obj) {
                 return _.isEqual(obj, { 'type': variantValue });
@@ -657,11 +667,6 @@
         removeVariants: function (value, id, type) {
             let templateDatas = this.templateData,
                 data = {};
-
-            // TODO: BUG
-            // if meta only have 1 value, remove this, should not hide all variants:
-            // if have 2 colors, 2 size, 1 material, remove material value, will remove all variants right now. should 
-            // rerender variants.
 
             data[type] = value;
             data[`${type}s_ID`] = id;
@@ -764,15 +769,12 @@
             let $table = this.$element.find(CLASS_TABLE),
                 newObjs;
 
-
             $table
                 .removeClass('is-upgraded').removeAttr('data-upgraded')
                 .find('tr td:first-child,tr th:first-child').remove();
 
             newObjs = this.checkTemplateData().newObjs;
-            this.$element.find(`${CLASS_TR}.${CLASS_SHOULD_REMOVE}`).hide();
-
-            $table.trigger('enable');
+            $table.trigger('enable').find('.is_deleted label.mdl-checkbox').hide();
 
             if (newObjs.length) {
                 this.doReplicator(newObjs);
@@ -822,7 +824,7 @@
                     oldObjs.push(data);
                     this.addBackVariants(id);
                 } else {
-                    this.$tbody.append(window.Mustache.render(this.template, data));
+                    this.$tbody.prepend(window.Mustache.render(this.template, data));
                     newObjs.push(data);
                 }
             }
@@ -917,7 +919,7 @@
                         idKey = `${keys[i]}s_ID`;
                         $input.append(`<option selected value='${data.id || data[idKey]}'>${data[keys[i]]}</option>`).trigger('change');
                     } else {
-
+                        // TODO
                         // not select
                     }
                 }
