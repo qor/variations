@@ -40,7 +40,7 @@
     const CLASS_TR_SELECTED = `tr.is-selected:not(${CLASS_IS_DELETED})`;
     const CLASS_IS_CURRENT = 'is_current';
     const CLASS_INIT_FIELDSET = '.qor-fieldset--init';
-    const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new)';
+    const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new,.qor-product-init)';
     const CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible';
     const CLASS_MEDIALIBRARY_DATA = '.qor-field__mediabox-data';
     const CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save';
@@ -390,27 +390,30 @@
 
         addBackVariants: function (id) {
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
-                $collection = this.$element.find(`fieldset#${id}`);
+                $collection = this.$element.find(`fieldset#${id}`),
+                isDeleted = $tr.hasClass('is_deleted'),
+                $insertRow;
 
             if (!$tr.length || !$collection.length) {
                 return;
             }
 
-            this.hiddenVariantsID = _.without(this.hiddenVariantsID, id);
+            $tr.removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE} is_deleted is-selected`);
 
-            $tr
-                .removeClass(`${CLASS_IS_REMOVE} is_deleted is-selected`)
-                .find('.qor-product__action--add,.qor-product__action').toggle();
+            $insertRow = this.$tbody.find(`${CLASS_IS_DELETED}:first`);
 
-            $tr
-                .find('label').removeClass('is-disabled').show()
-                .find('.mdl-checkbox__input').prop('disabled', false);
+            if (isDeleted) {
+                $tr.find('label').removeClass('is-disabled').show().find('.mdl-checkbox__input').prop('disabled', false);
+                $tr.find('.qor-product__action--add,.qor-product__action').toggle();
 
-            $tr.prependTo(this.$tbody);
+                $insertRow.length ? $insertRow.before($tr) : $tr.appendTo(this.$tbody);
+                this.hiddenVariantsID = _.without(this.hiddenVariantsID, id);
 
-            $collection
-                .removeClass(CLASS_IS_REMOVE)
-                .find('.qor-fieldset__alert').remove();
+                $collection
+                    .removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE}`)
+                    .find('.qor-fieldset__alert').remove();
+            }
+
         },
 
         setCollectionID: function (collections) {
@@ -679,7 +682,7 @@
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
                 $collection = this.$element.find(`fieldset#${id}`);
 
-            if (!$tr.length || !$collection.length) {
+            if (!$tr.length || !$collection.length || $tr.hasClass('is_deleted')) {
                 return;
             }
 
@@ -769,8 +772,9 @@
             newObjs = this.checkTemplateData().newObjs;
             this.$element.find(`${CLASS_TR}.${CLASS_SHOULD_REMOVE}`).hide();
 
+            $table.trigger('enable');
+
             if (newObjs.length) {
-                $table.trigger('enable');
                 this.doReplicator(newObjs);
             }
         },
@@ -783,9 +787,11 @@
             this.replicator = this.replicator || $element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
             setTimeout(() => {
                 this.replicator.addReplicators(newObjs, this.$replicatorBtn);
-            }, 500);
+            }, 100);
 
-            this.$element.find(`.${CLASS_SHOULD_REMOVE}${CLASS_VARIANT_FEILD}`).find('.qor-fieldset__delete').trigger('click').hide();
+            this.$element
+                .find(`.${CLASS_SHOULD_REMOVE}${CLASS_VARIANT_FEILD} .qor-fieldset__delete`)
+                .trigger('click').hide();
         },
 
         checkTemplateData: function () {
@@ -795,7 +801,8 @@
                 oldObjs = [];
 
             this.collectExistVariantsID();
-            this.$element.find(CLASS_VARIANT_FEILD).addClass(CLASS_SHOULD_REMOVE).end().find(CLASS_TR).addClass(CLASS_SHOULD_REMOVE);
+            this.$element
+                .find(`${CLASS_VARIANT_FEILD},${CLASS_TR}:not(.qor-product-init)`).addClass(CLASS_SHOULD_REMOVE);
 
             for (let i = 0, len = templateData.length; i < len; i++) {
                 let data = templateData[i],
@@ -813,12 +820,7 @@
 
                 if (hasOldData || hasExistData) {
                     oldObjs.push(data);
-
-                    let $oldCollectionID = $(`#${id}`),
-                        $oldTableID = $(`tr[variants-id="${id}"]`);
-
-                    $oldCollectionID.removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE}`).find('.qor-fieldset__alert').remove();
-                    $oldTableID.removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE}`).show();
+                    this.addBackVariants(id);
                 } else {
                     this.$tbody.append(window.Mustache.render(this.template, data));
                     newObjs.push(data);
