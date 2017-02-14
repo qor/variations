@@ -79,6 +79,11 @@
                 &.is_current {
                     border-left: 2px solid #03a9f4;
                 }
+                &.is_deleted {
+                    text-decoration: line-through;
+                    background-color: rgba(255, 49, 0, .08);
+                    color: rgba(0, 0, 0, .24);
+                }
                 &:not(.qor-variant__edit) {
                     td img {
                         max-width: 48px;

@@ -18,7 +18,6 @@
   <div class="qor-fieldset-container qor-product__container">
     <div class="qor-field__block">
       <div class="qor-product__filter">
-        <h4>{{t "qor_admin.variantion.filter.title.Select" "Select"}}</h4>
         <ul class="qor-product__filter-base">
           <li><a href="javascript://" data-filter-type="all">All</a></li>
           <li><a href="javascript://" data-filter-type="none">None</a></li>
@@ -28,7 +27,7 @@
         <div class="qor-product__filter-actions" style="display:none;">
           <span><em>1</em> variants selected</span>
           <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__edit">Bulk Edit</button>
-          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__delete">Delete selected variants</button>
+          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__delete" data-confirm="{{t "qor_admin.form.are_you_sure_delete_select_variants" "Are you sure you want to delete the selected variants?"}}">Delete selected variants</button>
         </div>
       </div>
       <div class="qor-product__table">
@@ -42,11 +41,14 @@
           <tbody>
             {{if $current_values}}
               {{range $index, $value := $current_values}}
-                <tr>
+                <tr class="qor-product-init">
                   {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}
                     <td class="mdl-data-table__cell--non-numeric" data-variant-type="{{$meta.Name}}" data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">{{formatted_value_of $value $meta}}</td>
                   {{end}}
-                  <td>
+                  <td width="120px">
+                    <button type="button" class="mdl-button mdl-js-button qor-product__action--add" style="display: none;">
+                      {{t "qor_admin.form.button.add" "Add"}}
+                    </button>
                     <button type="button" id="qor-product-actions-for-{{$index}}" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
                       <i class="material-icons">more_vert</i>
                     </button>
@@ -55,7 +57,7 @@
                         <a href="javascript://" class="qor-product__action--edit">Edit</a>
                       </li>
                       <li class="mdl-menu__item" qor-icon-name="Delete">
-                        <a href="javascript://" class="qor-product__action--delete">Delete</a>
+                        <a href="javascript://" class="qor-product__action--delete" data-confirm="{{t "qor_admin.form.are_you_sure" "Are You Sure?"}}">Delete</a>
                       </li>
                     </ul>
                   </td>
@@ -67,7 +69,7 @@
       </div>
 
       {{range $index, $value := $current_values }}
-        <fieldset class="qor-fieldset qor-fieldset--init hidden">
+        <fieldset class="qor-fieldset qor-fieldset--init qor-product-init hidden">
           {{if has_delete_permission $meta}}
             <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
               <i class="material-icons md-18">delete</i>

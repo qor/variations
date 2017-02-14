@@ -36,6 +36,8 @@
     const ID_VARIANTS_PRE = 'qor_variants_id_';
     const CLASS_SHOULD_REMOVE = 'should_remove';
     const CLASS_IS_REMOVE = 'is_removed';
+    const CLASS_IS_DELETED = '.is_deleted';
+    const CLASS_TR_SELECTED = `tr.is-selected:not(${CLASS_IS_DELETED})`;
     const CLASS_IS_CURRENT = 'is_current';
     const CLASS_INIT_FIELDSET = '.qor-fieldset--init';
     const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new)';
@@ -84,7 +86,9 @@
                 .on(EVENT_CLICK, '.qor-product__filter a', this.filterVariant.bind(this))
                 .on(EVENT_CLICK, '.qor-product__filter-actions__edit', this.bulkEditVariants.bind(this))
                 .on(EVENT_CLICK, '.qor-product__filter-actions__delete', this.bulkDeleteVariants.bind(this))
+                .on(EVENT_CLICK, '.qor-product__action--add', this.addBackDeletedVariants.bind(this))
                 .on(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
+
         },
 
         unbind: function () {
@@ -203,7 +207,7 @@
             let $filter = $(e.target),
                 type = $filter.data('filter-type'),
                 $table = this.$element.find(CLASS_TABLE),
-                $selectedVariants = $table.find('tr.is-selected'),
+                $selectedVariants = $table.find(CLASS_TR_SELECTED),
                 unselectVariants = function () {
                     if ($selectedVariants.length) {
                         $selectedVariants.find('label.mdl-checkbox').trigger('click');
@@ -233,7 +237,7 @@
         },
 
         showVariantToolbar: function () {
-            let $selectedVariants = this.$element.find(CLASS_TABLE).find('tr.is-selected'),
+            let $selectedVariants = this.$element.find(CLASS_TABLE).find(CLASS_TR_SELECTED),
                 $actions = this.$element.find('.qor-product__filter-actions'),
                 len = $selectedVariants.length,
                 selectedVariantsID = [];
@@ -319,7 +323,7 @@
                     let name = data[j].name,
                         value = data[j].value,
                         url,
-                        $td = this.$tbody.find(`tr.is-selected td[data-variant-type="${name}"]`);
+                        $td = this.$tbody.find(`${CLASS_TR_SELECTED} td[data-variant-type="${name}"]`);
 
                     if (data[j].isImage) {
                         url = JSON.parse(value)[0].Url;
@@ -337,16 +341,20 @@
 
         },
 
-        bulkDeleteVariants: function () {
-            let trs = this.$tbody.find('tr.is-selected');
+        bulkDeleteVariants: function (e) {
+            let trs = this.$tbody.find(CLASS_TR_SELECTED),
+                confirmTitle = $(e.target).data('confirm');
 
-            trs.hide().addClass('is_removed');
-            for (let i = 0, len = trs.length; i < len; i++) {
-                let id = $(trs[i]).attr('variants-id');
-                this.$element.find(`#${id}`).find('.qor-fieldset__delete').click();
+            if (trs.length && confirmTitle && window.confirm(confirmTitle)) {
+
+                for (let i = 0, len = trs.length; i < len; i++) {
+                    let id = $(trs[i]).attr('variants-id');
+                    this.hideRemovedVariants(id);
+                }
+
+                this.$element.find('.qor-product__filter-actions').hide();
+                this.showVariantToolbar();
             }
-
-            this.$element.find('.qor-product__filter-actions').hide();
 
             return false;
         },
@@ -366,6 +374,43 @@
             $form.prepend('<h2>Bulk Edit</h2>');
 
             return $form;
+        },
+
+        addBackDeletedVariants: function (e) {
+            let $tr = $(e.target).closest('tr'),
+                id = $tr.attr('variants-id');
+
+
+            if (!id) {
+                return false;
+            }
+            this.addBackVariants(id);
+            // $tr.
+        },
+
+        addBackVariants: function (id) {
+            let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
+                $collection = this.$element.find(`fieldset#${id}`);
+
+            if (!$tr.length || !$collection.length) {
+                return;
+            }
+
+            this.hiddenVariantsID = _.without(this.hiddenVariantsID, id);
+
+            $tr
+                .removeClass(`${CLASS_IS_REMOVE} is_deleted is-selected`)
+                .find('.qor-product__action--add,.qor-product__action').toggle();
+
+            $tr
+                .find('label').removeClass('is-disabled').show()
+                .find('.mdl-checkbox__input').prop('disabled', false);
+
+            $tr.prependTo(this.$tbody);
+
+            $collection
+                .removeClass(CLASS_IS_REMOVE)
+                .find('.qor-fieldset__alert').remove();
         },
 
         setCollectionID: function (collections) {
@@ -450,6 +495,9 @@
             let productMetas = this.productMetas,
                 templateStart = '<tr variants-id=[[variantID]]>',
                 templateEnd = `<td>
+                                <button type="button" class="mdl-button mdl-js-button qor-product__action--add" style="display: none;">
+                                    Add
+                                </button>
                                 <button type="button" id="qor-product-actions-for-[[variantID]]" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
                                     <i class="material-icons">more_vert</i>
                                 </button>
@@ -472,11 +520,15 @@
         },
 
         deleteVariant: function (e) {
-            let id = $(e.target).closest('tr').attr('variants-id');
+            let id = $(e.target).closest('tr').attr('variants-id'),
+                confirmTitle = $(e.target).data('confirm');
 
-            this.hiddenVariantsID = this.hiddenVariantsID || [];
-            this.hideRemovedVariants(id);
-            this.hiddenVariantsID.push(id);
+            if (confirmTitle && window.confirm(confirmTitle)) {
+                this.hideRemovedVariants(id);
+                this.showVariantToolbar();
+            } else {
+                return false;
+            }
         },
 
         editVariant: function (e) {
@@ -583,6 +635,7 @@
             });
             this.removeVariants(variantValue, id, type);
             this.handleTemplateData();
+            // for bulk edit selector
             this.primaryMetaValue = _.reject(this.primaryMetaValue, function (obj) {
                 return _.isEqual(obj, { 'type': variantValue });
             });
@@ -594,6 +647,7 @@
             variantData.id = id.toString();
             this.variants[topType].push(variantData);
             this.renderVariants();
+            // for bulk edit selector
             this.primaryMetaValue.push({ 'type': variantValue });
         },
 
@@ -609,28 +663,39 @@
             data[type] = value;
             data[`${type}s_ID`] = id;
 
-            this.hiddenVariantsID = [];
-
             for (let i = 0, len = templateDatas.length; i < len; i++) {
-                let templateData = templateDatas[i],
-                    variantID;
+                let templateData = templateDatas[i];
 
                 if (_.isMatch(templateData, data)) {
-                    variantID = templateData.variantID;
-                    this.hideRemovedVariants(variantID);
-                    this.hiddenVariantsID.push(variantID);
+                    this.hideRemovedVariants(templateData.variantID);
                 } else {
                     continue;
                 }
-
             }
+            this.showVariantToolbar();
         },
 
         hideRemovedVariants: function (id) {
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
                 $collection = this.$element.find(`fieldset#${id}`);
 
-            $tr.hide().addClass(CLASS_IS_REMOVE);
+            if (!$tr.length || !$collection.length) {
+                return;
+            }
+
+            this.hiddenVariantsID = this.hiddenVariantsID || [];
+            this.hiddenVariantsID.push(id);
+
+            $tr
+                .addClass(`${CLASS_IS_REMOVE} is_deleted`).removeClass('is-selected')
+                .find('.qor-product__action--add,.qor-product__action').toggle();
+
+            $tr
+                .find('label').removeClass('is-checked').addClass('is-disabled').hide()
+                .find('.mdl-checkbox__input').prop({ 'checked': false, 'disabled': true });
+
+            $tr.appendTo(this.$tbody);
+
             $collection
                 .addClass(CLASS_IS_REMOVE)
                 .find('.qor-fieldset__alert').remove().end()
@@ -645,7 +710,7 @@
 
             if (variantsKey.length === 0) {
                 // empty table if no variants selected
-                this.$tbody.html('');
+                this.$tbody.find('tr:not(.qor-product-init)').hide();
                 return;
             }
 
@@ -736,21 +801,21 @@
                 let data = templateData[i],
                     hasOldData,
                     hasExistData,
-                    variantID = data.variantID;
+                    id = data.variantID;
 
                 if (hiddenVariantsID.length) {
-                    hasOldData = _.contains(hiddenVariantsID, variantID);
+                    hasOldData = _.contains(hiddenVariantsID, id);
                 }
 
                 if (this.existVariantsID.length) {
-                    hasExistData = _.contains(this.existVariantsID, variantID);
+                    hasExistData = _.contains(this.existVariantsID, id);
                 }
 
                 if (hasOldData || hasExistData) {
                     oldObjs.push(data);
 
-                    let $oldCollectionID = $(`#${variantID}`),
-                        $oldTableID = $(`tr[variants-id="${variantID}"]`);
+                    let $oldCollectionID = $(`#${id}`),
+                        $oldTableID = $(`tr[variants-id="${id}"]`);
 
                     $oldCollectionID.removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE}`).find('.qor-fieldset__alert').remove();
                     $oldTableID.removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE}`).show();
