@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	admin.RegisterViewPath("github.com/qor/product/views")
+	admin.RegisterViewPath("github.com/qor/variations/views")
 }
 
 type VariationsConfig struct {
