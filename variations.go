@@ -1,4 +1,4 @@
-package product
+package variations
 
 import (
 	"errors"
