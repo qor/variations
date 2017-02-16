@@ -237,20 +237,18 @@
         },
 
         showVariantToolbar: function () {
-            let $selectedVariants = this.$element.find(CLASS_TABLE).find(CLASS_TR_SELECTED),
+            let $selectedVariants = this.$tbody.find(CLASS_TR_SELECTED),
                 $actions = this.$element.find('.qor-product__filter-actions'),
                 len = $selectedVariants.length,
-                selectedVariantsID = [];
+                $bulkSelector = this.$element.find(CLASS_TABLE).find('th label.mdl-checkbox');
 
             if (!len) {
                 $actions.hide();
+                if ($bulkSelector.hasClass('is-checked')) {
+                    $bulkSelector.removeClass('is-checked').find('.mdl-checkbox__input').prop('checked', false);
+                }
             } else {
                 $actions.show().find('em').html(len);
-
-                $selectedVariants.each(function () {
-                    selectedVariantsID.push($(this).attr('variants-id'));
-                });
-                this.selectedVariantsID = selectedVariantsID;
             }
 
         },
@@ -261,7 +259,12 @@
                 $editForm = this.$element.find('.qor-variants__edit'),
                 colspanLen = $tr.find('td').length,
                 $emptyCol = $(`<tr class="qor-variants__edit"><td class="normal" colspan=${colspanLen}></td></tr>`),
-                buttonTemp = `<button type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored ${CLASS_MEDIALIBRARY_BULK_BUTTON.replace('.','')}">Save</button>`;
+                buttonTemp = `<button type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored ${CLASS_MEDIALIBRARY_BULK_BUTTON.replace('.','')}">
+                                Update varianrs
+                            </button>
+                            <button type="button" class="mdl-button mdl-js-button qor-product__bulk-cancel">
+                                Cancel
+                            </button>`;
 
             if ($editForm.length) {
                 return false;
@@ -275,34 +278,51 @@
                 .append(buttonTemp)
                 .trigger('enable')
                 .on(EVENT_CLICK, '.qor-product-icon', this.checkBulkEdit.bind(this))
-                .on(EVENT_CLICK, CLASS_MEDIALIBRARY_BULK_BUTTON, this.saveBulkEdit.bind(this));
+                .on(EVENT_CLICK, CLASS_MEDIALIBRARY_BULK_BUTTON, this.saveBulkEdit.bind(this))
+                .on(EVENT_CLICK, '.qor-product__bulk-cancel', this.removeBulkEdit.bind(this));
 
         },
 
         checkBulkEdit: function (e) {
             let $btn = $(e.target).closest('.qor-product-icon');
-
             $btn.toggleClass('selected');
         },
 
-        saveBulkEdit: function () {
-            let $checkedFeild = this.$element.find('.qor-product-icon.selected'),
-                bulkData = [];
+        removeBulkEdit: function () {
+            this.$element.find('.qor-variants__edit').remove();
+        },
 
-            if (!$checkedFeild.length) {
+        saveBulkEdit: function () {
+            let $parents = this.$element.find('.qor-product-icon.selected').parent(),
+                $selectedVariants = this.$tbody.find(CLASS_TR_SELECTED),
+                bulkData = [],
+                selectedVariantsID = [];
+
+            if (!$parents.length) {
                 this.$element.find('.qor-variants__edit').remove();
                 return false;
             }
 
-            $checkedFeild.each(function () {
-                let $input = $(this).parent().find(`${CLASS_VISIBLE_RESOURCE_INPUT},${CLASS_MEDIALIBRARY_DATA}`),
+            if (!$selectedVariants.length) {
+                window.alert('No variants select!');
+                return false;
+            }
+
+            $selectedVariants.each(function () {
+                selectedVariantsID.push($(this).attr('variants-id'));
+            });
+
+            $parents.each(function () {
+                let $input = $(this).find(`${CLASS_VISIBLE_RESOURCE_INPUT},${CLASS_MEDIALIBRARY_DATA}`),
                     data = {};
 
                 if ($input.length) {
                     if ($input.is(CLASS_MEDIALIBRARY_DATA)) {
                         data.isImage = true;
+                        data.$element = $(this);
                     } else {
                         data.isImage = false;
+                        data.$element = null;
                     }
                     data.name = $input.prop('name').match(/\.\w+$/g)[0].replace('.', '');
                     data.value = $input.val();
@@ -311,34 +331,50 @@
 
             });
 
-            this.syncBulkEditValue(bulkData);
+            this.syncBulkEditValue(bulkData, selectedVariantsID);
         },
 
-        syncBulkEditValue: function (data) {
-            let selectedVariantsID = this.selectedVariantsID,
-                $element = this.$element;
+        syncBulkEditValue: function (datas, ids) {
+            let $element = this.$element;
 
-            for (let i = 0, len = selectedVariantsID.length; i < len; i++) {
-                for (let j = 0, len2 = data.length; j < len2; j++) {
-                    let name = data[j].name,
-                        value = data[j].value,
+            for (let i = 0, len = ids.length; i < len; i++) {
+                let id = `#${ids[i]}`;
+                for (let j = 0, len2 = datas.length; j < len2; j++) {
+                    let data = datas[j],
+                        name = data.name,
+                        value = data.value,
                         url,
                         $td = this.$tbody.find(`${CLASS_TR_SELECTED} td[data-variant-type="${name}"]`);
 
-                    if (data[j].isImage) {
+                    if (data.isImage && JSON.parse(value)[0] && JSON.parse(value)[0].Url) {
                         url = JSON.parse(value)[0].Url;
                         $td.html(`<img src="${url}"/>`);
+                        this.bulkAddImages(data.$element, id);
                     } else {
                         $td.html(value);
                     }
 
-                    $element.find(`#${selectedVariantsID[i]}`).find(`[name$=${name}]`).not('[type="hidden"]').val(value);
+                    $element.find(`${id} [name$=${name}]`).not('[type="hidden"]').val(value);
 
                 }
             }
 
-            this.$element.find('.qor-variants__edit').remove();
+            $element.find('.qor-variants__edit').remove();
 
+        },
+
+        bulkAddImages: function ($element, id) {
+            if (!$element) {
+                return;
+            }
+
+            let $collection = this.$element.find(id),
+                $list = $collection.find('.qor-field__mediabox-list'),
+                data = $element.find(CLASS_MEDIALIBRARY_DATA).data('mediaData'),
+                template = window.Mustache.render($element.find('[name="media-box-template"]').html(), data);
+
+            $list.find('.qor-field__mediabox-item').remove();
+            $(template).appendTo($list).trigger('enable');
         },
 
         bulkDeleteVariants: function (e) {
@@ -353,6 +389,7 @@
                 }
 
                 this.$element.find('.qor-product__filter-actions').hide();
+
                 this.showVariantToolbar();
             }
 
@@ -400,13 +437,13 @@
 
             $tr.removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE} is_deleted is-selected`);
 
-            $insertRow = this.$tbody.find(`${CLASS_IS_DELETED}:first`);
+            $insertRow = this.$tbody.find(`tr:not(${CLASS_IS_DELETED}):last`);
 
             if (isDeleted) {
                 $tr.find('label').removeClass('is-disabled').show().find('.mdl-checkbox__input').prop('disabled', false);
                 $tr.find('.qor-product__action--add,.qor-product__action').toggle();
 
-                $insertRow.length ? $insertRow.before($tr) : $tr.appendTo(this.$tbody);
+                $insertRow.length ? $insertRow.after($tr) : $tr.appendTo(this.$tbody);
                 this.hiddenVariantsID = _.without(this.hiddenVariantsID, id);
 
                 $collection
