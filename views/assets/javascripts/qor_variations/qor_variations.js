@@ -260,7 +260,7 @@
                 colspanLen = $tr.find('td').length,
                 $emptyCol = $(`<tr class="qor-variants__edit"><td class="normal" colspan=${colspanLen}></td></tr>`),
                 buttonTemp = `<button type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored ${CLASS_MEDIALIBRARY_BULK_BUTTON.replace('.','')}">
-                                Update varianrs
+                                Update
                             </button>
                             <button type="button" class="mdl-button mdl-js-button qor-product__bulk-cancel">
                                 Cancel
@@ -722,6 +722,7 @@
 
         hideRemovedVariants: function (id) {
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
+                $editor = this.$tbody.find('.qor-variant__edit'),
                 $collection = this.$element.find(`fieldset#${id}`);
 
             if (!$tr.length || !$collection.length || $tr.hasClass('is_deleted')) {
@@ -730,6 +731,11 @@
 
             this.hiddenVariantsID = this.hiddenVariantsID || [];
             this.hiddenVariantsID.push(id);
+
+            if ($editor.length) {
+                this.$element.find('.qor-fieldset--new').before($editor.find('.qor-fieldset'));
+                $editor.remove();
+            }
 
             $tr
                 .addClass(`${CLASS_IS_REMOVE} is_deleted`).removeClass('is-selected')

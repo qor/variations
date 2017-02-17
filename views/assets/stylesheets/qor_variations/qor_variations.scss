@@ -47,6 +47,11 @@
         }
         .qor-product__table {
             width: 100%;
+            .qor-variant__edit {
+                .qor-fieldset {
+                    box-shadow: none;
+                }
+            }
             .qor-variants__edit {
                 td {
                     border-left: 2px solid #03a9f4;
@@ -85,12 +90,15 @@
                 white-space: inherit;
                 margin: 0;
                 box-shadow: none;
+                img {
+                    height: auto !important;
+                }
                 &:before {
                     display: none;
                 }
                 tr {
                     &.is_current {
-                        border-left: 2px solid #03a9f4;
+                        background-color: rgba(255, 200, 60, 0.32);
                     }
                     &.is_deleted {
                         text-decoration: line-through;
