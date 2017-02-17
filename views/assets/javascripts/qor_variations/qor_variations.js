@@ -319,10 +319,8 @@
                 if ($input.length) {
                     if ($input.is(CLASS_MEDIALIBRARY_DATA)) {
                         data.isImage = true;
+                        data.isDeleted = $(CLASS_MEDIALIBRARY_DATA).data('isDeleted');
                         data.$element = $(this);
-                    } else {
-                        data.isImage = false;
-                        data.$element = null;
                     }
                     data.name = $input.prop('name').match(/\.\w+$/g)[0].replace('.', '');
                     data.value = $input.val();
@@ -330,6 +328,8 @@
                 }
 
             });
+
+            console.log(bulkData);
 
             this.syncBulkEditValue(bulkData, selectedVariantsID);
         },
@@ -346,10 +346,12 @@
                         url,
                         $td = this.$tbody.find(`${CLASS_TR_SELECTED} td[data-variant-type="${name}"]`);
 
-                    if (data.isImage && JSON.parse(value)[0] && JSON.parse(value)[0].Url) {
-                        url = JSON.parse(value)[0].Url;
-                        $td.html(`<img src="${url}"/>`);
-                        this.bulkAddImages(data.$element, id);
+                    if (data.isImage) {
+                        if (!data.isDeleted && JSON.parse(value)[0] && JSON.parse(value)[0].Url) {
+                            url = JSON.parse(value)[0].Url;
+                            $td.html(`<img src="${url}"/>`);
+                            this.bulkAddImages(data, id);
+                        }
                     } else {
                         $td.html(value);
                     }
@@ -363,15 +365,18 @@
 
         },
 
-        bulkAddImages: function ($element, id) {
+        bulkAddImages: function (data, id) {
+            let $element = data.$element;
+
+
             if (!$element) {
                 return;
             }
 
             let $collection = this.$element.find(id),
                 $list = $collection.find('.qor-field__mediabox-list'),
-                data = $element.find(CLASS_MEDIALIBRARY_DATA).data('mediaData'),
-                template = window.Mustache.render($element.find('[name="media-box-template"]').html(), data);
+                mediaData = $element.find(CLASS_MEDIALIBRARY_DATA).data('mediaData'),
+                template = window.Mustache.render($element.find('[name="media-box-template"]').html(), mediaData);
 
             $list.find('.qor-field__mediabox-item').remove();
             $(template).appendTo($list).trigger('enable');
@@ -623,8 +628,12 @@
             $td = $editableVariant.find(`[data-variant-type="${variantType}"]`);
 
             if ($target.is('textarea')) {
-                url = JSON.parse(value)[0].Url;
-                $td.html(`<img src="${url}"/>`);
+                if (JSON.parse(value) && JSON.parse(value)[0]) {
+                    url = JSON.parse(value)[0].Url;
+                    $td.html(`<img src="${url}"/>`);
+                } else {
+                    $td.html('');
+                }
             } else {
                 $td.html(value);
             }

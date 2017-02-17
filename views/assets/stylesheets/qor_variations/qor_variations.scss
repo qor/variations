@@ -3,8 +3,7 @@
         padding: 16px 24px;
         background-color: #fff;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        .qor-fieldset__delete,
-        .qor-fieldset__alert {
+        .qor-fieldset__delete {
             display: none;
         }
         .qor-product__filter {
@@ -105,7 +104,7 @@
                         background-color: rgba(255, 49, 0, .08);
                         color: rgba(0, 0, 0, .24);
                     }
-                    &:not(.qor-variant__edit) {
+                    &[variants-id] {
                         td img {
                             max-width: 48px;
                             max-height: 48px;
