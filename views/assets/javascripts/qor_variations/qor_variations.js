@@ -326,10 +326,7 @@
                     data.value = $input.val();
                     bulkData.push(data);
                 }
-
             });
-
-            console.log(bulkData);
 
             this.syncBulkEditValue(bulkData, selectedVariantsID);
         },
@@ -496,7 +493,7 @@
                 for (let j = 0, len2 = primaryMeta.length; j < len2; j++) {
                     let key = primaryMeta[j],
                         innerObj = {},
-                        value = $tr.find(`[data-variant-type="${key}"]`).text();
+                        value = this.removeSpace($tr.find(`[data-variant-type="${key}"]`).text());
 
                     if (value) {
                         innerObj[key] = value;
