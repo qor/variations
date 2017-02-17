@@ -42,7 +42,9 @@
               {{range $index, $value := $current_values}}
                 <tr class="qor-product-init">
                   {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}
-                    <td class="mdl-data-table__cell--non-numeric" data-variant-type="{{$meta.Name}}" data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">{{formatted_value_of $value $meta}}</td>
+                    <td class="mdl-data-table__cell--non-numeric" data-variant-type="{{$meta.Name}}" data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">
+                      {{render_meta $value $meta "index"}}
+                    </td>
                   {{end}}
                   <td width="120px">
                     <button type="button" class="mdl-button mdl-js-button qor-product__action--add" style="display: none;">
