@@ -493,7 +493,7 @@
                 for (let j = 0, len2 = primaryMeta.length; j < len2; j++) {
                     let key = primaryMeta[j],
                         innerObj = {},
-                        value = this.removeSpace($tr.find(`[data-variant-type="${key}"]`).text());
+                        value = $.trim($tr.find(`[data-variant-type="${key}"]`).data('variant-value'));
 
                     if (value) {
                         innerObj[key] = value;
@@ -503,6 +503,7 @@
                     }
 
                 }
+
                 targetObj = _.where(data, obj);
                 targetObj.length && $tr.attr('variants-id', targetObj[0].variantID);
             }
