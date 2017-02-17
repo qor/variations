@@ -427,7 +427,6 @@
                 return false;
             }
             this.addBackVariants(id);
-            // $tr.
         },
 
         addBackVariants: function (id) {
@@ -450,11 +449,11 @@
 
                 $insertRow.length ? $insertRow.after($tr) : $tr.appendTo(this.$tbody);
                 this.hiddenVariantsID = _.without(this.hiddenVariantsID, id);
-
-                $collection
-                    .removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE}`)
-                    .find('.qor-fieldset__alert').remove();
             }
+
+            $collection
+                .removeClass(`${CLASS_SHOULD_REMOVE} ${CLASS_IS_REMOVE}`)
+                .find('.qor-fieldset__alert').remove();
 
         },
 
@@ -827,6 +826,8 @@
 
             newObjs = this.checkTemplateData().newObjs;
             $table.trigger('enable').find('.is_deleted label.mdl-checkbox').hide();
+
+            this.$tbody.find(`.${CLASS_SHOULD_REMOVE}`).remove();
 
             if (newObjs.length) {
                 this.doReplicator(newObjs);
