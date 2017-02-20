@@ -87,6 +87,7 @@
                 .on(EVENT_CLICK, '.qor-product__filter-actions__edit', this.bulkEditVariants.bind(this))
                 .on(EVENT_CLICK, '.qor-product__filter-actions__delete', this.bulkDeleteVariants.bind(this))
                 .on(EVENT_CLICK, '.qor-product__action--add', this.addBackDeletedVariants.bind(this))
+                .on(EVENT_CLICK, '.qor-product__fullscreen', this.fullscreen.bind(this))
                 .on(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
 
         },
@@ -102,6 +103,10 @@
                 this.productMetas.push($(productMetas[i]).data('inputName'));
             }
             this.setTemplate();
+        },
+
+        fullscreen: function () {
+            this.$element.toggleClass('fullscreen').find('.qor-product__fullscreen i').toggle();
         },
 
         collectExistVariantsID: function () {

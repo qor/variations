@@ -5,7 +5,13 @@
 <div class="qor-field" data-toggle="qor.product.variants" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
   <label class="qor-field__label" for="{{.InputId}}">
     {{meta_label .Meta}}
+    <button type="button" class="mdl-button mdl-js-button mdl-button--icon qor-product__fullscreen">
+      <i class="material-icons">fullscreen</i>
+      <i class="material-icons" style="display: none;">fullscreen_exit</i>
+    </button>
   </label>
+
+
 
   <div class="qor-fieldset-container qor-product__container">
     <div class="qor-product__property">

@@ -1,4 +1,33 @@
 [data-toggle="qor.product.variants"] {
+    &.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, .87);
+        z-index: 9999;
+        padding: 0;
+        >label {
+            background-color: #fff;
+            padding: 24px 24px 0;
+            font-size: 18px;
+            color: rgba(0, 0, 0, .87);
+            height: 32px;
+        }
+        .qor-product__container {
+            height: calc(100% - 48px);
+            overflow-x: hidden;
+            overflow-y: auto;
+            width: calc(100% - 48px);
+        }
+    }
+    >label {
+        padding-bottom: 16px;
+        button {
+            float: right;
+        }
+    }
     .qor-product__container {
         padding: 16px 24px;
         background-color: #fff;
@@ -141,6 +170,7 @@
                     .qor-fieldset {
                         margin: 0;
                         border: 0;
+                        background-color: rgba(255, 200, 60, .08);
                     }
                 }
             }
