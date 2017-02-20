@@ -107,6 +107,7 @@
 
         fullscreen: function () {
             this.$element.toggleClass('fullscreen').find('.qor-product__fullscreen i').toggle();
+            $('.qor-slideout').toggleClass('overflow-hidden');
         },
 
         collectExistVariantsID: function () {
