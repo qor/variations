@@ -266,7 +266,7 @@
                 colspanLen = $tr.find('td').length,
                 $emptyCol = $(`<tr class="qor-variants__edit"><td class="normal" colspan=${colspanLen}></td></tr>`),
                 buttonTemp = `<button type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored ${CLASS_MEDIALIBRARY_BULK_BUTTON.replace('.','')}">
-                                Update
+                                OK
                             </button>
                             <button type="button" class="mdl-button mdl-js-button qor-product__bulk-cancel">
                                 Cancel
@@ -346,15 +346,10 @@
                     let data = datas[j],
                         name = data.name,
                         value = data.value,
-                        url,
                         $td = this.$tbody.find(`${CLASS_TR_SELECTED} td[data-variant-type="${name}"]`);
 
                     if (data.isImage) {
-                        if (!data.isDeleted && JSON.parse(value)[0] && JSON.parse(value)[0].Url) {
-                            url = JSON.parse(value)[0].Url;
-                            $td.html(`<img src="${url}"/>`);
-                            this.bulkAddImages(data, id);
-                        }
+                        this.bulkAddImages(data, id);
                     } else {
                         $td.html(value);
                     }
@@ -371,18 +366,31 @@
         bulkAddImages: function (data, id) {
             let $element = data.$element;
 
-
             if (!$element) {
                 return;
             }
 
             let $collection = this.$element.find(id),
                 $list = $collection.find('.qor-field__mediabox-list'),
-                mediaData = $element.find(CLASS_MEDIALIBRARY_DATA).data('mediaData'),
-                template = window.Mustache.render($element.find('[name="media-box-template"]').html(), mediaData);
+                $template = $element.find('.qor-field__mediabox-item').not('.is_deleted'),
+                $td = this.$tbody.find(`${CLASS_TR_SELECTED} td[data-variant-type="${data.name}"]`),
+                $img = '';
 
-            $list.find('.qor-field__mediabox-item').remove();
-            $(template).appendTo($list).trigger('enable');
+            if ($template.length) {
+                $list.find('.qor-field__mediabox-item').remove();
+
+                $template.each(function () {
+                    let $this = $(this),
+                        key = $this.data("primary-key"),
+                        url = $this.data("original-url");
+
+                    $img = `${$img}<img data-primary-key='${key}' src='${url}'/>`;
+                });
+
+                $td.html($img);
+                $template.appendTo($list);
+            }
+
         },
 
         bulkDeleteVariants: function (e) {
@@ -626,14 +634,22 @@
                 $editableVariant = $(`tr[variants-id="${collectionID}"]`),
                 variantType = $target.prop('name').match(/\.\w+$/g)[0].replace('.', ''),
                 $td,
-                url;
+                imageValue;
 
             $td = $editableVariant.find(`[data-variant-type="${variantType}"]`);
 
             if ($target.is('textarea')) {
-                if (JSON.parse(value) && JSON.parse(value)[0]) {
-                    url = JSON.parse(value)[0].Url;
-                    $td.html(`<img src="${url}"/>`);
+                imageValue = JSON.parse(value);
+
+                if (imageValue.length) {
+                    let img = '';
+
+                    for (let i = 0, len = imageValue.length; i < len; i++) {
+                        img = `${img}<img src="${imageValue[i].Url}"/>`;
+                    }
+
+                    $td.html(img);
+
                 } else {
                     $td.html('');
                 }
