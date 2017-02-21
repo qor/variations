@@ -22,8 +22,8 @@
     const EVENT_CLICK = `click.${NAMESPACE}`;
     const EVENT_KEYUP = `keyup.${NAMESPACE}`;
     const EVENT_CHANGED_MEDIALIBRARY = 'changed.medialibrary';
-    const EVENT_REPLICATOR_ADDED = `added.${NAME_REPLICATOR}`;
-    const EVENT_REPLICATORS_ADDED = `addedMultiple.${NAME_REPLICATOR}`;
+    const EVENT_REPLICATOR_ADDED = `addedMultiple.${NAME_REPLICATOR}`;
+    const EVENT_REPLICATORS_ADDED = `addedMultipleDone.${NAME_REPLICATOR}`;
     const CLASS_SELECT_CONTAINER = '.qor-product__property';
     const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
     const CLASS_SELECT_TYPE = '.qor-product__property-selector';
@@ -66,6 +66,7 @@
             this.primaryMeta = [];
             this.existVariantsID = [];
             this.primaryMetaValue = [];
+            this.replicatorTemplate = [];
             this.$tbody = $element.find(CLASS_TBODY);
             this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
             this.$fieldBlock = $element.find('.qor-product__container>.qor-field__block');
@@ -696,6 +697,8 @@
             } else {
                 this.doUnselelct(variantValue, topType, type, id, isLastOne);
             }
+
+            this.replicatorTemplate = [];
             this.initFilter();
         },
 
@@ -860,9 +863,12 @@
             // TODO: add loading
             // this.addLoading();
             this.replicator = this.replicator || $element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
-            setTimeout(() => {
-                this.replicator.addReplicators(newObjs, this.$replicatorBtn);
-            }, 100);
+
+            // setTimeout(() => {
+            //     // this.replicator.addReplicators(newObjs, this.$replicatorBtn);
+            // }, 100);
+
+            this.replicator.add(null, newObjs, true);
 
             this.$element
                 .find(`.${CLASS_SHOULD_REMOVE}${CLASS_VARIANT_FEILD} .qor-fieldset__delete`)
@@ -966,14 +972,27 @@
 
         // sync variants data between table and replicator
         addVariantReplicator: function (e, $item, data) {
-            if ($item.closest('.qor-product__container').length) {
-                $item.attr({ 'variant-data': JSON.stringify(data), 'id': data.variantID }).hide();
-                this.syncReplicatorData($item, data);
-            }
+            // console.time('addVariantReplicator')
+            $item = this.syncReplicatorData($item, data);
+            $item.attr('id', data.variantID).hide();
+            this.replicatorTemplate.push($item.prop('outerHTML'));
+            // console.timeEnd('addVariantReplicator')
         },
 
         addVariantReplicators: function () {
-            $('.qor-product__loading').remove();
+            // $('.qor-product__loading').remove();
+
+            let $div = $('<div></div>'),
+                $target = this.$element.find('.qor-product__block'),
+                html = this.replicatorTemplate.join('');
+
+
+            $div.appendTo($target);
+
+            // console.time('insert')
+            this.replaceHtml($div[0], html);
+            // console.timeEnd('insert')
+
         },
 
         syncReplicatorData: function ($item, data) {
@@ -997,6 +1016,17 @@
                     }
                 }
             }
+
+            return $item;
+
+        },
+
+        replaceHtml: function (el, html) {
+            let oldEl = typeof el === "string" ? document.getElementById(el) : el,
+                newEl = oldEl.cloneNode(false);
+            newEl.innerHTML = html;
+            oldEl.parentNode.replaceChild(newEl, oldEl);
+            return newEl;
         },
 
         destroy: function () {
