@@ -967,20 +967,20 @@
         addLoading: function () {
             $('.qor-product__loading').remove();
             var $loading = $(QorProductVariants.TEMPLATE_LOADING);
-            $loading.appendTo($(CLASS_SELECT_CONTAINER)).trigger('enable');
+            $loading.appendTo($(CLASS_FIELDSET_CONTAINER)).trigger('enable');
         },
 
         // sync variants data between table and replicator
         addVariantReplicator: function (e, $item, data) {
-            // console.time('addVariantReplicator')
+            this.addLoading();
             $item = this.syncReplicatorData($item, data);
             $item.attr('id', data.variantID).hide();
             this.replicatorTemplate.push($item.prop('outerHTML'));
-            // console.timeEnd('addVariantReplicator')
         },
 
         addVariantReplicators: function () {
-            // $('.qor-product__loading').remove();
+
+            $('.qor-product__loading').remove();
 
             let $div = $('<div></div>'),
                 $target = this.$element.find('.qor-product__block'),
@@ -989,9 +989,9 @@
 
             $div.appendTo($target);
 
-            // console.time('insert')
+            console.time('insert')
             this.replaceHtml($div[0], html);
-            // console.timeEnd('insert')
+            console.timeEnd('insert')
 
         },
 
@@ -999,8 +999,8 @@
             let keys = Object.keys(data);
 
             for (let i = 0, len = keys.length; i < len; i++) {
-                let $input = $item.find(`[name$=${keys[i]}]`).not('[type="hidden"]');
-                let idKey;
+                let $input = $item.find(`[name$=${keys[i]}]`).not('[type="hidden"]'),
+                    idKey, html;
 
                 if (!$input.length) {
                     continue;
@@ -1009,7 +1009,8 @@
                 if ($input.is('select')) {
                     if ($input.data('remote-data')) {
                         idKey = `${keys[i]}s_ID`;
-                        $input.append(`<option selected value='${data.id || data[idKey]}'>${data[keys[i]]}</option>`).trigger('change');
+                        html = `<option selected value='${data.id || data[idKey]}'>${data[keys[i]]}</option>`;
+                        this.replaceHtml($input[0], html);
                     } else {
                         // TODO
                         // not select
