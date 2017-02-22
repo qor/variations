@@ -16,7 +16,8 @@
             height: 32px;
         }
         .qor-product__container {
-            height: calc(100% - 48px);
+            height: calc(100% - 72px);
+            padding-bottom: 24px;
             overflow-x: hidden;
             overflow-y: auto;
             width: calc(100% - 48px);
@@ -91,6 +92,9 @@
             .qor-variants__edit {
                 td {
                     border-left: 2px solid #03a9f4;
+                }
+                .mdl-checkbox {
+                    margin-bottom: 24px;
                 }
                 fieldset {
                     padding-left: 60px;

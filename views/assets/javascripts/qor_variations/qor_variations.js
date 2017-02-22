@@ -24,7 +24,6 @@
     const EVENT_CHANGED_MEDIALIBRARY = 'changed.medialibrary';
     const EVENT_REPLICATOR_ADDED = `addedMultiple.${NAME_REPLICATOR}`;
     const EVENT_REPLICATORS_ADDED = `addedMultipleDone.${NAME_REPLICATOR}`;
-    const CLASS_SELECT_CONTAINER = '.qor-product__property';
     const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
     const CLASS_SELECT_TYPE = '.qor-product__property-selector';
     const CLASS_TBODY = '.qor-product__table tbody';
@@ -42,6 +41,7 @@
     const CLASS_INIT_FIELDSET = '.qor-fieldset--init';
     const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new,.qor-product-init)';
     const CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible';
+    const CLASS_BULK_RESOURCE_INPUT = 'input[name*="QorResource.Variations"][type!="hidden"]';
     const CLASS_MEDIALIBRARY_DATA = '.qor-field__mediabox-data';
     const CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save';
     const CLASS_MEDIALIBRARY_BULK_BUTTON = '.qor-product__bulk-save';
@@ -210,17 +210,27 @@
             }
         },
 
+        toggleCheckbox: function (ele, isChecked) {
+            ele.each(function () {
+                if (isChecked) {
+                    $(this).addClass('is-checked').find('.mdl-checkbox__input').prop('checked', true).closest('tr').addClass('is-selected');
+                } else {
+                    $(this).removeClass('is-checked').find('.mdl-checkbox__input').prop('checked', false).closest('tr').removeClass('is-selected');
+                }
+            });
+        },
+
         filterVariant: function (e) {
             let $filter = $(e.target),
                 type = $filter.data('filter-type'),
                 $table = this.$element.find(CLASS_TABLE),
-                $selectedVariants = $table.find(CLASS_TR_SELECTED),
                 unselectVariants = function () {
+                    let $selectedVariants = $table.find(CLASS_TR_SELECTED);
                     if ($selectedVariants.length) {
-                        $selectedVariants.find('label.mdl-checkbox').trigger('click');
-                        $table.find('th label.mdl-checkbox').removeClass('is-checked').find('.mdl-checkbox__input').prop('checked', false);
+                        this.toggleCheckbox($selectedVariants.find('label.mdl-checkbox'));
+                        this.toggleCheckbox($table.find('th label.mdl-checkbox'));
                     }
-                };
+                }.bind(this);
 
             switch (type) {
             case 'all':
@@ -231,7 +241,7 @@
                 break;
             default:
                 unselectVariants();
-                this.$tbody.find(`tr[variants-id*="_${this.removeSpace(type)}_"] label.mdl-checkbox`).trigger('click');
+                this.toggleCheckbox(this.$tbody.find(`tr[variants-id*="_${this.removeSpace(type)}_"] label.mdl-checkbox`), true);
                 break;
             }
 
@@ -252,7 +262,7 @@
             if (!len) {
                 $actions.hide();
                 if ($bulkSelector.hasClass('is-checked')) {
-                    $bulkSelector.removeClass('is-checked').find('.mdl-checkbox__input').prop('checked', false);
+                    this.toggleCheckbox($bulkSelector);
                 }
             } else {
                 $actions.show().find('em').html(len);
@@ -287,7 +297,6 @@
                 .on(EVENT_CLICK, '.qor-product-icon', this.checkBulkEdit.bind(this))
                 .on(EVENT_CLICK, CLASS_MEDIALIBRARY_BULK_BUTTON, this.saveBulkEdit.bind(this))
                 .on(EVENT_CLICK, '.qor-product__bulk-cancel', this.removeBulkEdit.bind(this));
-
         },
 
         checkBulkEdit: function (e) {
@@ -320,7 +329,7 @@
             });
 
             $parents.each(function () {
-                let $input = $(this).find(`${CLASS_VISIBLE_RESOURCE_INPUT},${CLASS_MEDIALIBRARY_DATA}`),
+                let $input = $(this).find(`${CLASS_BULK_RESOURCE_INPUT},${CLASS_MEDIALIBRARY_DATA}`),
                     data = {};
 
                 if ($input.length) {
@@ -330,7 +339,7 @@
                         data.$element = $(this);
                     }
                     data.name = $input.prop('name').match(/\.\w+$/g)[0].replace('.', '');
-                    data.value = $input.val();
+                    data.value = $input.is(':checkbox') ? $input.is(':checked') : $input.val();
                     bulkData.push(data);
                 }
             });
@@ -347,7 +356,8 @@
                     let data = datas[j],
                         name = data.name,
                         value = data.value,
-                        $td = this.$tbody.find(`${CLASS_TR_SELECTED} td[data-variant-type="${name}"]`);
+                        $td = this.$tbody.find(`${CLASS_TR_SELECTED} td[data-variant-type="${name}"]`),
+                        $collectionInput = $element.find(`${id} [name$=".${name}"][type!="hidden"]`);
 
                     if (data.isImage) {
                         this.bulkAddImages(data, id);
@@ -355,7 +365,16 @@
                         $td.html(value);
                     }
 
-                    $element.find(`${id} [name$=${name}]`).not('[type="hidden"]').val(value);
+                    if ($collectionInput.is(':checkbox')) {
+                        $collectionInput.prop('checked', value);
+                        if (value) {
+                            $collectionInput.closest('label').addClass('is-checked');
+                        } else {
+                            $collectionInput.closest('label').removeClass('is-checked');
+                        }
+                    } else {
+                        $collectionInput.val(value);
+                    }
 
                 }
             }
@@ -433,7 +452,6 @@
         addBackDeletedVariants: function (e) {
             let $tr = $(e.target).closest('tr'),
                 id = $tr.attr('variants-id');
-
 
             if (!id) {
                 return false;
@@ -610,6 +628,7 @@
 
             $item
                 .appendTo($emptyCol.find('td'))
+                .trigger('enable')
                 .find(CLASS_MEDIALIBRARY_BUTTON).remove().end()
                 .append(buttonTemp)
                 .show().removeClass('hidden')
@@ -688,6 +707,7 @@
                 return false;
             }
 
+            this.addLoading();
 
             // if already have variants:
             this.variants[topType] = this.variants[topType] || [];
@@ -860,14 +880,7 @@
         doReplicator: function (newObjs) {
             let $element = this.$element;
 
-            // TODO: add loading
-            // this.addLoading();
             this.replicator = this.replicator || $element.find(CLASS_FIELDSET_CONTAINER).data(NAME_REPLICATOR);
-
-            // setTimeout(() => {
-            //     // this.replicator.addReplicators(newObjs, this.$replicatorBtn);
-            // }, 100);
-
             this.replicator.add(null, newObjs, true);
 
             this.$element
@@ -964,35 +977,21 @@
             }
         },
 
-        addLoading: function () {
-            $('.qor-product__loading').remove();
-            var $loading = $(QorProductVariants.TEMPLATE_LOADING);
-            $loading.appendTo($(CLASS_FIELDSET_CONTAINER)).trigger('enable');
-        },
-
         // sync variants data between table and replicator
         addVariantReplicator: function (e, $item, data) {
-            this.addLoading();
             $item = this.syncReplicatorData($item, data);
             $item.attr('id', data.variantID).hide();
             this.replicatorTemplate.push($item.prop('outerHTML'));
         },
 
         addVariantReplicators: function () {
-
-            $('.qor-product__loading').remove();
-
             let $div = $('<div></div>'),
                 $target = this.$element.find('.qor-product__block'),
                 html = this.replicatorTemplate.join('');
 
-
             $div.appendTo($target);
-
-            console.time('insert')
             this.replaceHtml($div[0], html);
-            console.timeEnd('insert')
-
+            $('.qor-product__loading').remove();
         },
 
         syncReplicatorData: function ($item, data) {
@@ -1028,6 +1027,11 @@
             newEl.innerHTML = html;
             oldEl.parentNode.replaceChild(newEl, oldEl);
             return newEl;
+        },
+
+        addLoading: function () {
+            var $loading = $(QorProductVariants.TEMPLATE_LOADING);
+            $loading.appendTo(this.$element.find(CLASS_FIELDSET_CONTAINER)).trigger('enable');
         },
 
         destroy: function () {
