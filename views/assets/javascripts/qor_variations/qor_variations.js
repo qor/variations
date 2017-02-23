@@ -90,11 +90,23 @@
                 .on(EVENT_CLICK, '.qor-product__action--add', this.addBackDeletedVariants.bind(this))
                 .on(EVENT_CLICK, '.qor-product__fullscreen', this.fullscreen.bind(this))
                 .on(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
-
         },
 
         unbind: function () {
-            // TODO
+            $document
+                .off(EVENT_REPLICATOR_ADDED, this.addVariantReplicator.bind(this))
+                .off(EVENT_REPLICATORS_ADDED, this.addVariantReplicators.bind(this));
+
+            this.$element
+                .off('select2:select select2:unselect', CLASS_SELECT, this.selectVariants.bind(this))
+                .off(EVENT_CLICK, '.qor-product__action--edit', this.editVariant.bind(this))
+                .off(EVENT_CLICK, '.qor-product__action--delete', this.deleteVariant.bind(this))
+                .off(EVENT_CLICK, '.qor-product__filter a', this.filterVariant.bind(this))
+                .off(EVENT_CLICK, '.qor-product__filter-actions__edit', this.bulkEditVariants.bind(this))
+                .off(EVENT_CLICK, '.qor-product__filter-actions__delete', this.bulkDeleteVariants.bind(this))
+                .off(EVENT_CLICK, '.qor-product__action--add', this.addBackDeletedVariants.bind(this))
+                .off(EVENT_CLICK, '.qor-product__fullscreen', this.fullscreen.bind(this))
+                .off(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
         },
 
         initMetas: function () {
@@ -128,7 +140,7 @@
 
             for (let i = 0, len = primaryMeta.length; i < len; i++) {
                 let metaArr = [],
-                    meta = $(primaryMeta[i]).data('variant-type');
+                    meta = $(primaryMeta[i]).attr('data-filter-meta', i).data('variant-type');
 
                 this.primaryMeta.push(meta);
 
@@ -152,7 +164,7 @@
 
                             if (!alreadyHaveMeta) {
                                 metaArr.push(obj);
-                                this.primaryMetaValue.push({ 'type': value });
+                                this.primaryMetaValue.push({ 'type': value, 'meta': meta });
                             }
                             // add id for old variants, will keep old collection if already have collections;
                             elementObj[`${meta}_ID`] = obj.id;
@@ -206,7 +218,10 @@
             $filter.html('');
 
             for (let i = 0, len = primaryMetaValue.length; i < len; i++) {
-                $filter.append(window.Mustache.render(QorProductVariants.TEMPLATE_FILTER, primaryMetaValue[i]));
+                let data = primaryMetaValue[i];
+                data.number = this.primaryMeta.indexOf(data.meta);
+
+                $filter.append(window.Mustache.render(QorProductVariants.TEMPLATE_FILTER, data));
             }
         },
 
@@ -707,8 +722,6 @@
                 return false;
             }
 
-            this.addLoading();
-
             // if already have variants:
             this.variants[topType] = this.variants[topType] || [];
 
@@ -738,7 +751,7 @@
 
             // for bulk edit selector
             this.primaryMetaValue = _.reject(this.primaryMetaValue, function (obj) {
-                return _.isEqual(obj, { 'type': variantValue });
+                return _.isEqual(obj, { 'type': variantValue, 'meta': type });
             });
         },
 
@@ -749,7 +762,7 @@
             this.variants[topType].push(variantData);
             this.renderVariants();
             // for bulk edit selector
-            this.primaryMetaValue.push({ 'type': variantValue });
+            this.primaryMetaValue.push({ 'type': variantValue, 'meta': type });
         },
 
         removeVariants: function (value, id, type) {
@@ -873,7 +886,10 @@
             this.$tbody.find(`.${CLASS_SHOULD_REMOVE}`).remove();
 
             if (newObjs.length) {
-                this.doReplicator(newObjs);
+                setTimeout(function () {
+                    this.doReplicator(newObjs);
+                }.bind(this), 500);
+
             }
         },
 
@@ -991,7 +1007,6 @@
 
             $div.appendTo($target);
             this.replaceHtml($div[0], html);
-            $('.qor-product__loading').remove();
         },
 
         syncReplicatorData: function ($item, data) {
@@ -1040,7 +1055,7 @@
         }
     };
 
-    QorProductVariants.TEMPLATE_FILTER = `<li><a href="javascript://" data-filter-type="[[type]]">[[type]]</a></li>`;
+    QorProductVariants.TEMPLATE_FILTER = `<li><a href="javascript://" data-filter-type="[[type]]" data-filter-meta=[[number]]>[[type]]</a></li>`;
 
     QorProductVariants.TEMPLATE_LOADING = (
         `<div class="qor-product__loading">

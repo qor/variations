@@ -42,34 +42,66 @@
         .qor-fieldset__delete {
             display: none;
         }
+        .qor-product__property-selector {
+            .select2-selection__choice__remove,
+            .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                color: #fff;
+            }
+            &[data-filter-meta="0"] {
+                .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                    background-color: #0288d1;
+                }
+            }
+            &[data-filter-meta="1"] {
+                .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                    background-color: #ff9517;
+                }
+            }
+            &[data-filter-meta="2"] {
+                .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                    background-color: #00863e;
+                }
+            }
+        }
         .qor-product__filter {
             margin-bottom: 8px;
-            float: right;
             margin-top: -12px;
+            position: relative;
+            width: 100%;
+            .qor-product__filter-base a {
+                color: rgba(0, 0, 0, 0.24);
+            }
+            a {
+                &[data-filter-meta="0"] {
+                    color: #0288d1;
+                }
+                &[data-filter-meta="1"] {
+                    color: #ff9517;
+                }
+                &[data-filter-meta="2"] {
+                    color: #00863e;
+                }
+            }
             ul,
-            h4,
-            .qor-product__filter-base li,
-            .qor-product__filter-options li {
+            li,
+            {
                 margin: 0;
-                display: inline-block;
-                vertical-align: middle;
+                display: inline;
                 line-height: 24px;
                 padding: 0;
             }
-            h4,
-            .qor-product__filter-base li,
-            .qor-product__filter-options li {
+            ul>li {
                 font-size: 12px;
-                margin: 0 0 0 8px;
+                margin: 0 8px 0 0;
             }
         }
         .qor-product__filter-actions {
             position: absolute;
             background-color: #f5f5f5;
-            top: 28px;
             left: 42px;
             z-index: 20;
-            right: 2px;
+            right: 0;
+            bottom: -48px;
             em {
                 font-style: normal;
             }
