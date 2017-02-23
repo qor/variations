@@ -751,7 +751,7 @@
 
             // for bulk edit selector
             this.primaryMetaValue = _.reject(this.primaryMetaValue, function (obj) {
-                return _.isEqual(obj, { 'type': variantValue, 'meta': type });
+                return _.isMatch(obj, { 'type': variantValue, 'meta': type });
             });
         },
 
