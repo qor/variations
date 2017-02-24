@@ -296,7 +296,7 @@
                             </button>
                             <button type="button" class="mdl-button mdl-js-button qor-product__bulk-cancel">
                                 Cancel
-                            </button>`;
+                            </button><span class="qor-product__bulk-hint"></span>`;
 
             if ($editForm.length) {
                 return false;
@@ -315,8 +315,20 @@
         },
 
         checkBulkEdit: function (e) {
-            let $btn = $(e.target).closest('.qor-product-icon');
+            let $btn = $(e.target).closest('.qor-product-icon'),
+                $editor = this.$element.find('.qor-variants__edit'),
+                $hint = $editor.find('.qor-product__bulk-hint'),
+                $items;
+
             $btn.toggleClass('selected');
+
+            $items = $editor.find('.qor-product-icon.selected').length;
+
+            if ($items) {
+                $hint.html(`${$items} items will be updated`);
+            } else {
+                $hint.html('');
+            }
         },
 
         removeBulkEdit: function () {
@@ -424,6 +436,9 @@
 
                 $td.html($img);
                 $template.appendTo($list);
+            } else {
+                $td.html('');
+                $list.find('.qor-field__mediabox-item').remove();
             }
 
         },
