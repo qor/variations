@@ -15,9 +15,9 @@
 
     const _ = window._;
     const $document = $(document);
-    const NAMESPACE = 'qor.product.variants';
+    const NAMESPACE = 'qor.variations';
     const NAME_REPLICATOR = 'qor.replicator';
-    const EVENT_ENABLE = `enable.${NAMESPACE}`;
+    const EVENT_ENABLE = `enableVariations.${NAMESPACE}`;
     const EVENT_DISABLE = `disable.${NAMESPACE}`;
     const EVENT_CLICK = `click.${NAMESPACE}`;
     const EVENT_KEYUP = `keyup.${NAMESPACE}`;
@@ -46,6 +46,14 @@
     const CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save';
     const CLASS_MEDIALIBRARY_BULK_BUTTON = '.qor-product__bulk-save';
     const CLASS_FILTER = '.qor-product__filter-options';
+
+    function replaceHtml(el, html) {
+        let oldEl = typeof el === "string" ? document.getElementById(el) : el,
+            newEl = oldEl.cloneNode(false);
+        newEl.innerHTML = html;
+        oldEl.parentNode.replaceChild(newEl, oldEl);
+        return newEl;
+    }
 
     function QorProductVariants(element, options) {
         this.$element = $(element);
@@ -115,6 +123,7 @@
             for (let i = 0, len = productMetas.length; i < len; i++) {
                 this.productMetas.push($(productMetas[i]).data('inputName'));
             }
+
             this.setTemplate();
         },
 
@@ -1021,7 +1030,7 @@
                 html = this.replicatorTemplate.join('');
 
             $div.appendTo($target);
-            this.replaceHtml($div[0], html);
+            replaceHtml($div[0], html);
         },
 
         syncReplicatorData: function ($item, data) {
@@ -1039,7 +1048,7 @@
                     if ($input.data('remote-data')) {
                         idKey = `${keys[i]}s_ID`;
                         html = `<option selected value='${data.id || data[idKey]}'>${data[keys[i]]}</option>`;
-                        this.replaceHtml($input[0], html);
+                        replaceHtml($input[0], html);
                     } else {
                         // TODO
                         // not select
@@ -1049,14 +1058,6 @@
 
             return $item;
 
-        },
-
-        replaceHtml: function (el, html) {
-            let oldEl = typeof el === "string" ? document.getElementById(el) : el,
-                newEl = oldEl.cloneNode(false);
-            newEl.innerHTML = html;
-            oldEl.parentNode.replaceChild(newEl, oldEl);
-            return newEl;
         },
 
         addLoading: function () {
@@ -1098,17 +1099,25 @@
     };
 
     $(function () {
-        let selector = '[data-toggle="qor.product.variants"]';
+        let selector = '[data-toggle="qor.variations"]';
 
-        $(document).
-        on(EVENT_DISABLE, function (e) {
-            QorProductVariants.plugin.call($(selector, e.target), 'destroy');
-        }).
-        on(EVENT_ENABLE, function (e) {
-            QorProductVariants.plugin.call($(selector, e.target));
-        }).
-        triggerHandler(EVENT_ENABLE);
+        $document
+            .on(EVENT_DISABLE, function (e) {
+                QorProductVariants.plugin.call($(selector, e.target), 'destroy');
+            })
+            .on(EVENT_ENABLE, function (e) {
+                QorProductVariants.plugin.call($(selector, e.target));
+            })
+            .on('beforeEnable.qor.slideout', '.qor-slideout', function () {
+                QorProductVariants.fieldsetInits = $(selector).find('.qor-fieldset--inits').html();
+                $(selector).find('.qor-fieldset--inits').html('');
+            })
+            .on('afterEnable.qor.slideout', '.qor-slideout', function () {
+                replaceHtml($(selector).find('.qor-fieldset--inits')[0], QorProductVariants.fieldsetInits);
+                $document.triggerHandler(EVENT_ENABLE);
+            })
+            .triggerHandler(EVENT_ENABLE);
+
     });
-
     return QorProductVariants;
 });

@@ -2,7 +2,7 @@
 {{$meta := .Meta}}
 {{$inputName := .InputName}}
 
-<div class="qor-field" data-toggle="qor.product.variants" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
+<div class="qor-field" data-toggle="qor.variations" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
   <label class="qor-field__label" for="{{.InputId}}">
     {{meta_label .Meta}}
     <button type="button" class="mdl-button mdl-js-button mdl-button--icon qor-product__fullscreen">
@@ -74,17 +74,19 @@
           </tbody>
         </table>
       </div>
-
-      {{range $index, $value := $current_values }}
-        <fieldset class="qor-fieldset qor-fieldset--init qor-product-init hidden">
-          {{if has_delete_permission $meta}}
-            <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
-              <i class="material-icons md-18">delete</i>
-            </button>
-          {{end}}
-          {{render_nested_form $value (edit_sections $meta.Resource) $index}}
-        </fieldset>
-      {{end}}
+      
+      <div class="qor-fieldset--inits">
+        {{range $index, $value := $current_values }}
+          <fieldset class="qor-fieldset qor-fieldset--init qor-product-init hidden">
+            {{if has_delete_permission $meta}}
+              <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
+                <i class="material-icons md-18">delete</i>
+              </button>
+            {{end}}
+            {{render_nested_form $value (edit_sections $meta.Resource) $index}}
+          </fieldset>
+        {{end}}
+      </div>
 
       {{if has_create_permission .Meta}}
 
