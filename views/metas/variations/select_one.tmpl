@@ -19,8 +19,7 @@
           {{end}}
 
           {{range $values := (.Meta.Config.GetCollection .ResourceValue .Context)}}
-              <option value="{{index $values 0}}">{{index $values 1}}</option>
-            {{end}}
+            <option value="{{index $values 0}}">{{index $values 1}}</option>
           {{end}}
         {{end}}
       </select>
