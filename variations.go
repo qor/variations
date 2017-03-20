@@ -13,13 +13,13 @@ func init() {
 }
 
 type VariationsConfig struct {
-	Resource     *admin.Resource
+	resource     *admin.Resource
 	PrimaryAttrs []string // primary attrs should in EditAttrs of the variation resource
 }
 
 func (variationsConfig VariationsConfig) PrimaryAttributeMetas() (metas []*admin.Meta) {
 	for _, name := range variationsConfig.PrimaryAttrs {
-		metas = append(metas, variationsConfig.Resource.GetMeta(name))
+		metas = append(metas, variationsConfig.resource.GetMeta(name))
 	}
 	return
 }
@@ -33,7 +33,7 @@ func (variationsConfig *VariationsConfig) ConfigureQorMeta(metaor resource.Metao
 		meta.Type = "variations"
 
 		variationsRes := meta.Resource
-		variationsConfig.Resource = variationsRes
+		variationsConfig.resource = variationsRes
 		definedPrimaryAttrs := len(variationsConfig.PrimaryAttrs) > 0
 
 		for _, meta := range variationsRes.ConvertSectionToMetas(meta.Resource.EditAttrs()) {
