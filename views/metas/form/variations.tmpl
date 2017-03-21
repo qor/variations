@@ -2,7 +2,8 @@
 {{$meta := .Meta}}
 {{$inputName := .InputName}}
 
-<div class="qor-field" data-toggle="qor.variations" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
+
+<div class="qor-field" data-toggle="qor.variations" data-input-name="{{$inputName}}" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
   <label class="qor-field__label" for="{{.InputId}}">
     {{meta_label .Meta}}
     <button type="button" class="mdl-button mdl-js-button mdl-button--icon qor-product__fullscreen">
@@ -74,7 +75,7 @@
           </tbody>
         </table>
       </div>
-      
+
       <div class="qor-fieldset--inits">
         {{range $index, $value := $current_values }}
           <fieldset class="qor-fieldset qor-fieldset--init qor-product-init hidden">
