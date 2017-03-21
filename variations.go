@@ -37,8 +37,8 @@ func (variationsConfig *VariationsConfig) ConfigureQorMeta(metaor resource.Metao
 		definedPrimaryAttrs := len(variationsConfig.PrimaryAttrs) > 0
 
 		for _, meta := range variationsRes.ConvertSectionToMetas(meta.Resource.EditAttrs()) {
-			tagSettings := utils.ParseTagOption(meta.FieldStruct.Tag.Get("variations"))
 			if !definedPrimaryAttrs {
+				tagSettings := utils.ParseTagOption(meta.FieldStruct.Tag.Get("variations"))
 				if _, ok := tagSettings["PRIMARY"]; ok {
 					variationsConfig.PrimaryAttrs = append(variationsConfig.PrimaryAttrs, meta.Name)
 				}
