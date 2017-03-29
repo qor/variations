@@ -213,7 +213,15 @@
                     obj = data[keys[i]];
 
                 for (let j = 0, len2 = obj.length; j < len2; j++) {
-                    $select.append(`<option selected value='${obj[j].id}'>${obj[j][key]}</option>`);
+
+                    let option = $select.find(`option[value="${obj[j].id}"]`);
+
+                    if (option.length) {
+                        option.prop('selected', true);
+                    } else {
+                        $select.append(`<option selected value='${obj[j].id}'>${obj[j][key]}</option>`);
+                    }
+
                 }
 
                 $select.trigger('change');
