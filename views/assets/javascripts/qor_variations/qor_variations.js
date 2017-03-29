@@ -160,21 +160,24 @@
                 for (let j = 0, len2 = collections.length; j < len2; j++) {
                     let $collection = $(collections[j]),
                         $input = $collection.find(`[name$=${meta}]`).not('[type="hidden"]'),
+                        id = $input.val(),
                         obj = {},
                         elementObj = {};
 
                     if ($input.is('select')) {
-                        if ($input.val()) {
-                            let value = $input.find('option').html();
-                            obj[meta] = value;
-                            obj.id = $input.val();
+
+                        if (id) {
+                            let texts = $input.find(`option[value="${id}"]`).html();
+
+                            obj[meta] = texts;
+                            obj.id = id;
 
                             alreadyHaveMeta = this.checkSameObj(lastObj, obj);
 
                             if (!alreadyHaveMeta) {
                                 metaArr.push(obj);
                                 this.primaryMetaValue.push({
-                                    'type': value,
+                                    'type': texts,
                                     'meta': meta
                                 });
                             }
