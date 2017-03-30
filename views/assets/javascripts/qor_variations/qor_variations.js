@@ -13,39 +13,40 @@
 
     'use strict';
 
-    const _ = window._;
-    const $document = $(document);
-    const NAMESPACE = 'qor.variations';
-    const NAME_REPLICATOR = 'qor.replicator';
-    const EVENT_ENABLE = `enableVariations.${NAMESPACE}`;
-    const EVENT_DISABLE = `disable.${NAMESPACE}`;
-    const EVENT_CLICK = `click.${NAMESPACE}`;
-    const EVENT_KEYUP = `keyup.${NAMESPACE}`;
-    const EVENT_CHANGED_MEDIALIBRARY = 'changed.medialibrary';
-    const EVENT_REPLICATOR_ADDED = `addedMultiple.${NAME_REPLICATOR}`;
-    const EVENT_REPLICATORS_ADDED = `addedMultipleDone.${NAME_REPLICATOR}`;
-    const CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]';
-    const CLASS_SELECT_TYPE = '.qor-product__property-selector';
-    const CLASS_TBODY = '.qor-product__table tbody';
-    const CLASS_TABLE = '.qor-product__table table';
-    const CLASS_TR = '.qor-product__table tbody tr';
-    const CLASS_FIELDSET_CONTAINER = '.qor-product__container';
-    const CLASS_FIELDSET = '.qor-fieldset';
-    const CLASS_BUTTON_ADD = '.qor-fieldset__add';
-    const ID_VARIANTS_PRE = 'qor_variants_id_';
-    const CLASS_SHOULD_REMOVE = 'should_remove';
-    const CLASS_IS_REMOVE = 'is_removed';
-    const CLASS_IS_DELETED = '.is_deleted';
-    const CLASS_TR_SELECTED = `tr.is-selected:not(${CLASS_IS_DELETED})`;
-    const CLASS_IS_CURRENT = 'is_current';
-    const CLASS_INIT_FIELDSET = '.qor-fieldset--init';
-    const CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new,.qor-product-init)';
-    const CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible';
-    const CLASS_BULK_RESOURCE_INPUT = 'input[name*="QorResource.Variations"][type!="hidden"]';
-    const CLASS_MEDIALIBRARY_DATA = '.qor-field__mediabox-data';
-    const CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save';
-    const CLASS_MEDIALIBRARY_BULK_BUTTON = '.qor-product__bulk-save';
-    const CLASS_FILTER = '.qor-product__filter-options';
+    const _ = window._,
+        $document = $(document),
+        NAMESPACE = 'qor.variations',
+        NAME_REPLICATOR = 'qor.replicator',
+        EVENT_ENABLE = `enableVariations.${NAMESPACE}`,
+        EVENT_DISABLE = `disable.${NAMESPACE}`,
+        EVENT_CLICK = `click.${NAMESPACE}`,
+        EVENT_KEYUP = `keyup.${NAMESPACE}`,
+        EVENT_CHANGED_MEDIALIBRARY = 'changed.medialibrary',
+        EVENT_REPLICATOR_ADDED = `addedMultiple.${NAME_REPLICATOR}`,
+        EVENT_REPLICATORS_ADDED = `addedMultipleDone.${NAME_REPLICATOR}`,
+        CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]',
+        CLASS_SELECT_TYPE = '.qor-product__property-selector',
+        CLASS_TBODY = '.qor-product__table tbody',
+        CLASS_TABLE = '.qor-product__table table',
+        CLASS_TR = '.qor-product__table tbody tr',
+        CLASS_FIELDSET_CONTAINER = '.qor-product__container',
+        CLASS_FIELDSET = '.qor-fieldset',
+        CLASS_BUTTON_ADD = '.qor-fieldset__add',
+        ID_VARIANTS_PRE = 'qor_variants_id_',
+        CLASS_SHOULD_REMOVE = 'should_remove',
+        CLASS_IS_REMOVE = 'is_removed',
+        CLASS_IS_DELETED = '.is_deleted',
+        CLASS_TR_SELECTED = `tr.is-selected:not(${CLASS_IS_DELETED})`,
+        CLASS_IS_CURRENT = 'is_current',
+        CLASS_INIT_FIELDSET = '.qor-fieldset--init',
+        CLASS_VARIANT_FEILD = '.qor-fieldset:not(.qor-fieldset--new,.qor-product-init)',
+        CLASS_MEDIALIBRARY_DATA = '.qor-field__mediabox-data',
+        CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save',
+        CLASS_MEDIALIBRARY_BULK_BUTTON = '.qor-product__bulk-save',
+        CLASS_FILTER = '.qor-product__filter-options';
+
+    let CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible',
+        CLASS_BULK_RESOURCE_INPUT = 'input[name*="QorResource.Variations"][type!="hidden"]';
 
     function replaceHtml(el, html) {
         let oldEl = typeof el === "string" ? document.getElementById(el) : el,
@@ -65,7 +66,14 @@
         constructor: QorProductVariants,
 
         init: function() {
-            let $element = this.$element;
+            let $element = this.$element,
+                inputName = $element.data('input-name');
+
+            if (inputName && inputName != 'QorResource.Variations') {
+                CLASS_VISIBLE_RESOURCE_INPUT = `input[name*="${inputName}"]:visible`;
+                CLASS_BULK_RESOURCE_INPUT = `input[name*="${inputName}"][type!="hidden"]`;
+            }
+
             this.bind();
             this.variants = {};
             this.PrimaryInitMetaData = {};
