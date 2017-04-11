@@ -409,7 +409,7 @@
             let $element = this.$element;
 
             for (let i = 0, len = ids.length; i < len; i++) {
-                let id = `#${ids[i]}`;
+                let id = `fieldset[fieldset-varitions-id="${ids[i]}"]`;
                 for (let j = 0, len2 = datas.length; j < len2; j++) {
                     let data = datas[j],
                         name = data.name,
@@ -522,7 +522,7 @@
 
         addBackVariants: function(id) {
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
-                $collection = this.$element.find(`fieldset#${id}`),
+                $collection = this.$element.find(`fieldset[fieldset-varitions-id="${id}"]`),
                 isDeleted = $tr.hasClass('is_deleted'),
                 $insertRow;
 
@@ -568,7 +568,7 @@
                 objValues = _.values(obj).map(this.removeSpace).sort();
                 variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}_`;
                 obj.variantID = variantID;
-                $collection.attr('id', variantID);
+                $collection.attr('fieldset-varitions-id', variantID);
                 initVariantData.push(obj);
             }
 
@@ -680,7 +680,7 @@
             }
 
             if (variantID) {
-                $item = $(`#${variantID}`);
+                $item = $(`fieldset[fieldset-varitions-id="${variantID}"]`);
             } else {
                 return false;
             }
@@ -711,7 +711,7 @@
         syncCollectionToVariant: function(e) {
             let $target = $(e.target),
                 value = $target.val(),
-                collectionID = $target.closest(CLASS_FIELDSET).attr('id'),
+                collectionID = $target.closest(CLASS_FIELDSET).attr('fieldset-varitions-id'),
                 $editableVariant = $(`tr[variants-id="${collectionID}"]`),
                 variantType = $target.prop('name').match(/\.\w+$/g)[0].replace('.', ''),
                 $td,
@@ -839,7 +839,7 @@
         hideRemovedVariants: function(id) {
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
                 $editor = this.$tbody.find('.qor-variant__edit'),
-                $collection = this.$element.find(`fieldset#${id}`);
+                $collection = this.$element.find(`fieldset[fieldset-varitions-id="${id}"]`);
 
             if (!$tr.length || !$collection.length || $tr.hasClass('is_deleted')) {
                 return;
@@ -1051,7 +1051,7 @@
         // sync variants data between table and replicator
         addVariantReplicator: function(e, $item, data) {
             $item = this.syncReplicatorData($item, data);
-            $item.attr('id', data.variantID).hide();
+            $item.attr('fieldset-varitions-id', data.variantID).hide();
             this.replicatorTemplate.push($item.prop('outerHTML'));
         },
 
