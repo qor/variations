@@ -2,7 +2,6 @@
 {{$meta := .Meta}}
 {{$inputName := .InputName}}
 
-
 <div class="qor-field" data-toggle="qor.variations" data-input-name="{{$inputName}}" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
   <label class="qor-field__label" for="{{.InputId}}">
     {{meta_label .Meta}}
@@ -11,8 +10,6 @@
       <i class="material-icons" style="display: none;">fullscreen_exit</i>
     </button>
   </label>
-
-
 
   <div class="qor-fieldset-container qor-product__container">
     <div class="qor-product__property">
@@ -31,9 +28,13 @@
         <ul class="qor-product__filter-options">
         </ul>
         <div class="qor-product__filter-actions" style="display:none;">
-          <span><em>1</em> variants selected</span>
-          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__edit">Bulk Edit</button>
-          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__delete" data-confirm="{{t "qor_admin.form.are_you_sure_delete_select_variants" "Are you sure you want to delete the selected variants?"}}">Delete selected variants</button>
+          <span>{{t "qor_variations.action.seleced_variants" "<em>1</em> variants selected"}}</span>
+          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__edit">
+            {{t "qor_variations.action.bulk_edit" "Bulk Edit"}}
+          </button>
+          <button type="button" class="mdl-button mdl-js-button qor-product__filter-actions__delete" data-confirm="{{t "qor_admin.form.are_you_sure_delete_select_variants" "Are you sure you want to delete the selected variants?"}}">
+            {{t "qor_variations.action.delete_selected_variant" "Delete selected variants"}}
+          </button>
         </div>
       </div>
       <div class="qor-product__table">
@@ -90,8 +91,6 @@
       </div>
 
       {{if has_create_permission .Meta}}
-
-
         <fieldset class="qor-fieldset qor-fieldset--new">
           <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
             <i class="material-icons md-18">delete</i>
