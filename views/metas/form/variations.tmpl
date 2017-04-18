@@ -56,14 +56,14 @@
                   {{end}}
                   <td width="120px">
                     <button type="button" class="mdl-button mdl-js-button qor-product__action--add" style="display: none;">
-                      {{t "qor_admin.form.button.add" "Add"}}
+                      {{t "qor_admin.form.actions.add" "Add"}}
                     </button>
                     <button type="button" id="qor-product-actions-for-{{$index}}" class="mdl-button mdl-js-button mdl-button--icon qor-product__action">
                       <i class="material-icons">more_vert</i>
                     </button>
                     <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="qor-product-actions-for-{{$index}}">
                       <li class="mdl-menu__item" qor-icon-name="Edit">
-                        <a href="javascript://" class="qor-product__action--edit">Edit</a>
+                        <a href="javascript://" class="qor-product__action--edit">{{t "qor_admin.form.actions.edit" "Edit"}}</a>
                       </li>
                       <li class="mdl-menu__item" qor-icon-name="Delete">
                         <a href="javascript://" class="qor-product__action--delete" data-confirm="{{t "qor_admin.form.are_you_sure" "Are You Sure?"}}">Delete</a>
