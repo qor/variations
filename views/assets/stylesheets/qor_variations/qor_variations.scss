@@ -182,9 +182,6 @@
                 white-space: inherit;
                 margin: 0;
                 box-shadow: none;
-                img {
-                    height: auto !important;
-                }
                 &:before {
                     display: none;
                 }
@@ -199,13 +196,22 @@
                     }
                     &[variants-id] {
                         td img {
-                            max-width: 48px;
-                            max-height: 48px;
+                            max-width: 32px !important;
+                            max-height: 32px !important;
+                            height: auto !important;
                             border: 1px solid rgba(0, 0, 0, .24);
                         }
                     }
-                    &.qor-variant__edit:hover {
-                        background-color: #fff;
+                    &.qor-variant__edit {
+                        img {
+                            max-width: 150px !important;
+                            max-height: 150px !important;
+                            height: auto !important;
+                            border: 1px solid rgba(0, 0, 0, .24);
+                        }
+                         :hover {
+                            background-color: #fff;
+                        }
                     }
                 }
                 th:first-of-type {
