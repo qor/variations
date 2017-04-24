@@ -476,18 +476,22 @@
 
         bulkDeleteVariants: function(e) {
             let trs = this.$tbody.find(CLASS_TR_SELECTED),
-                confirmTitle = $(e.target).data('confirm');
+                _this = this,
+                confirmData = $(e.target).data();
 
-            if (trs.length && confirmTitle && window.confirm(confirmTitle)) {
+            if (trs.length && confirmData.confirm) {
+                window.QOR.qorConfirm(confirmData, function(confirm) {
+                    if (confirm) {
+                        for (let i = 0, len = trs.length; i < len; i++) {
+                            let id = $(trs[i]).attr('variants-id');
+                            _this.hideRemovedVariants(id);
+                        }
+                        _this.$element.find('.qor-product__filter-actions').hide();
+                        _this.showVariantToolbar();
+                    }
+                });
 
-                for (let i = 0, len = trs.length; i < len; i++) {
-                    let id = $(trs[i]).attr('variants-id');
-                    this.hideRemovedVariants(id);
-                }
 
-                this.$element.find('.qor-product__filter-actions').hide();
-
-                this.showVariantToolbar();
             }
 
             return false;
@@ -656,15 +660,21 @@
         },
 
         deleteVariant: function(e) {
-            let id = $(e.target).closest('tr').attr('variants-id'),
-                confirmTitle = $(e.target).data('confirm');
+            let $target = $(e.target),
+                id = $target.closest('tr').attr('variants-id'),
+                _this = this,
+                confirmData = $target.data();
 
-            if (confirmTitle && window.confirm(confirmTitle)) {
-                this.hideRemovedVariants(id);
-                this.showVariantToolbar();
-            } else {
-                return false;
+
+            if (confirmData.confirm) {
+                window.QOR.qorConfirm(confirmData, function(confirm) {
+                    if (confirm) {
+                        _this.hideRemovedVariants(id);
+                        _this.showVariantToolbar();
+                    }
+                });
             }
+            return false;
         },
 
         editVariant: function(e) {
