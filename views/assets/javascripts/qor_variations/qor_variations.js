@@ -477,10 +477,10 @@
         bulkDeleteVariants: function(e) {
             let trs = this.$tbody.find(CLASS_TR_SELECTED),
                 _this = this,
-                confirmMessage = $(e.target).data('confirm');
+                confirmData = $(e.target).data();
 
-            if (trs.length && confirmMessage) {
-                window.QOR.qorConfirm(confirmMessage, function(confirm) {
+            if (trs.length && confirmData.confirm) {
+                window.QOR.qorConfirm(confirmData, function(confirm) {
                     if (confirm) {
                         for (let i = 0, len = trs.length; i < len; i++) {
                             let id = $(trs[i]).attr('variants-id');
@@ -663,11 +663,11 @@
             let $target = $(e.target),
                 id = $target.closest('tr').attr('variants-id'),
                 _this = this,
-                confirmMessage = $target.data('confirm');
+                confirmData = $target.data();
 
 
-            if (confirmMessage) {
-                window.QOR.qorConfirm(confirmMessage, function(confirm) {
+            if (confirmData.confirm) {
+                window.QOR.qorConfirm(confirmData, function(confirm) {
                     if (confirm) {
                         _this.hideRemovedVariants(id);
                         _this.showVariantToolbar();
