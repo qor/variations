@@ -74,6 +74,11 @@
                 CLASS_BULK_RESOURCE_INPUT = `input[name*="${inputName}"][type!="hidden"]`;
             }
 
+            if ($element.closest('[data-toggle="qor.inlineEdit"]').length) {
+                this.$element.on(EVENT_CLICK, '.qor-product__fullscreen', this.fullscreen.bind(this));
+                return;
+            }
+
             this.bind();
             this.variants = {};
             this.PrimaryInitMetaData = {};
