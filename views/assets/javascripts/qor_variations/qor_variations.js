@@ -74,11 +74,6 @@
                 CLASS_BULK_RESOURCE_INPUT = `input[name*="${inputName}"][type!="hidden"]`;
             }
 
-            if ($element.closest('[data-toggle="qor.inlineEdit"]').length) {
-                this.$element.on(EVENT_CLICK, '.qor-product__fullscreen', this.fullscreen.bind(this));
-                return;
-            }
-
             this.bind();
             this.variants = {};
             this.PrimaryInitMetaData = {};
@@ -638,7 +633,7 @@
 
         setTemplate: function() {
             let productMetas = this.productMetas,
-                templateStart = '<tr variants-id=[[variantID]]>',
+                templateStart = '<tr variants-id="[[variantID]]">',
                 templateEnd = `<td>
                                 <button type="button" class="mdl-button mdl-js-button qor-product__action--add" style="display: none;">
                                     Add
@@ -658,7 +653,10 @@
 
 
             _.each(productMetas, function(productMeta) {
-                templateStart = `${templateStart}<td data-variant-type=${productMeta} class="mdl-data-table__cell--non-numeric">[[${productMeta}]]</td>`;
+                templateStart = `${templateStart}<td data-variant-type=${productMeta} class="mdl-data-table__cell--non-numeric">
+                                    <span class="qor-product__value"></span>
+                                    <button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored qor-variant__inline-edit" type="button"><i class="material-icons">mode_edit</i></button>
+                                  </td>`;
             });
 
             this.template = `${templateStart}${templateEnd}`;
@@ -732,7 +730,7 @@
                 $td,
                 imageValue;
 
-            $td = $editableVariant.find(`[data-variant-type="${variantType}"]`);
+            $td = $editableVariant.find(`[data-variant-type="${variantType}"] .qor-product__value`);
 
             if ($target.is('textarea')) {
                 imageValue = JSON.parse(value);
