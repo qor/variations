@@ -43,7 +43,8 @@
         CLASS_MEDIALIBRARY_DATA = '.qor-field__mediabox-data',
         CLASS_MEDIALIBRARY_BUTTON = '.qor-product__button-save',
         CLASS_MEDIALIBRARY_BULK_BUTTON = '.qor-product__bulk-save',
-        CLASS_FILTER = '.qor-product__filter-options';
+        CLASS_FILTER = '.qor-product__filter-options',
+        CLASS_INLINE_EDIT = '.qor-variant__inline-edit';
 
     let CLASS_VISIBLE_RESOURCE_INPUT = 'input[name*="QorResource.Variations"]:visible',
         CLASS_BULK_RESOURCE_INPUT = 'input[name*="QorResource.Variations"][type!="hidden"]';
@@ -105,6 +106,7 @@
                 .on(EVENT_CLICK, '.qor-product__filter-actions__delete', this.bulkDeleteVariants.bind(this))
                 .on(EVENT_CLICK, '.qor-product__action--add', this.addBackDeletedVariants.bind(this))
                 .on(EVENT_CLICK, '.qor-product__fullscreen', this.fullscreen.bind(this))
+                .on(EVENT_CLICK, CLASS_INLINE_EDIT, this.showInlineEdit.bind(this))
                 .on(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
         },
 
@@ -122,6 +124,7 @@
                 .off(EVENT_CLICK, '.qor-product__filter-actions__delete', this.bulkDeleteVariants.bind(this))
                 .off(EVENT_CLICK, '.qor-product__action--add', this.addBackDeletedVariants.bind(this))
                 .off(EVENT_CLICK, '.qor-product__fullscreen', this.fullscreen.bind(this))
+                .off(EVENT_CLICK, CLASS_INLINE_EDIT, this.showInlineEdit.bind(this))
                 .off(EVENT_CLICK, 'label.mdl-checkbox input:checkbox', this.showBulkEditVariantToolbar.bind(this));
         },
 
@@ -210,6 +213,16 @@
             this.initPrimarySelector();
             this.primaryMetaValue.length && this.initFilter();
             this.setCollectionID(collections);
+        },
+
+        showInlineEdit: function(e) {
+            let $btn = $(e.target),
+                $td = $btn.closest('td'),
+                primaryMeta = this.primaryMeta;
+
+            if (primaryMeta.indexOf($td.data('variant-type')) !== -1) {
+                $td.find(CLASS_INLINE_EDIT).remove();
+            }
         },
 
         initPrimarySelector: function() {
