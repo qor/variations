@@ -24,8 +24,9 @@
         EVENT_CHANGED_MEDIALIBRARY = 'changed.medialibrary',
         EVENT_REPLICATOR_ADDED = `addedMultiple.${NAME_REPLICATOR}`,
         EVENT_REPLICATORS_ADDED = `addedMultipleDone.${NAME_REPLICATOR}`,
-        CLASS_SELECT = '.qor-product__property select[data-toggle="qor.chooser"]',
-        CLASS_SELECT_TYPE = '.qor-product__property-selector',
+        CLASS_PRIMARY_META = '.qor-product__property',
+        CLASS_SELECT = `${CLASS_PRIMARY_META} select[data-toggle="qor.chooser"]`,
+        CLASS_SELECT_TYPE = `${CLASS_PRIMARY_META}-selector`,
         CLASS_TBODY = '.qor-product__table tbody',
         CLASS_TABLE = '.qor-product__table table',
         CLASS_TR = '.qor-product__table tbody tr',
@@ -86,6 +87,7 @@
             this.$tbody = $element.find(CLASS_TBODY);
             this.$replicatorBtn = $element.find(CLASS_BUTTON_ADD);
             this.$fieldBlock = $element.find('.qor-product__container>.qor-field__block');
+            this.hasPrimaryMeta = $element.find(CLASS_PRIMARY_META).data('has-primary-meta');
             this.BottomSheets = $('body').data('qor.bottomsheets');
             this.initMetas();
             this.initPrimaryMeta();
@@ -209,7 +211,8 @@
             this.handleTemplateData();
             this.initPrimarySelector();
             this.primaryMetaValue.length && this.initFilter();
-            this.setCollectionID(collections);
+
+            this.hasPrimaryMeta && this.setCollectionID(collections);
         },
 
         initPrimarySelector: function() {
@@ -409,7 +412,7 @@
             let $element = this.$element;
 
             for (let i = 0, len = ids.length; i < len; i++) {
-                let id = `fieldset[fieldset-varitions-id="${ids[i]}"]`;
+                let id = `fieldset[fieldset-variants-id="${ids[i]}"]`;
                 for (let j = 0, len2 = datas.length; j < len2; j++) {
                     let data = datas[j],
                         name = data.name,
@@ -490,8 +493,6 @@
                         _this.showVariantToolbar();
                     }
                 });
-
-
             }
 
             return false;
@@ -526,7 +527,7 @@
 
         addBackVariants: function(id) {
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
-                $collection = this.$element.find(`fieldset[fieldset-varitions-id="${id}"]`),
+                $collection = this.$element.find(`fieldset[fieldset-variants-id="${id}"]`),
                 isDeleted = $tr.hasClass('is_deleted'),
                 $insertRow;
 
@@ -556,11 +557,19 @@
             let primaryMeta = this.primaryMeta,
                 initVariantData = [];
 
+            if (!collections.length) {
+                return;
+            }
+
             for (let i = 0, len = collections.length; i < len; i++) {
                 let $collection = $(collections[i]),
                     obj = {},
                     objValues,
                     variantID;
+
+                if ($collection.attr('fieldset-variants-id')) {
+                    return;
+                }
 
                 for (let j = 0, len2 = primaryMeta.length; j < len2; j++) {
                     let variantData = $collection.data(`variants-${primaryMeta[j]}`);
@@ -572,7 +581,7 @@
                 objValues = _.values(obj).map(this.removeSpace).sort();
                 variantID = `${ID_VARIANTS_PRE}${objValues.join('_')}_`;
                 obj.variantID = variantID;
-                $collection.attr('fieldset-varitions-id', variantID);
+                $collection.attr('fieldset-variants-id', variantID);
                 initVariantData.push(obj);
             }
 
@@ -690,7 +699,7 @@
             }
 
             if (variantID) {
-                $item = $(`fieldset[fieldset-varitions-id="${variantID}"]`);
+                $item = $(`fieldset[fieldset-variants-id="${variantID}"]`);
             } else {
                 return false;
             }
@@ -721,7 +730,7 @@
         syncCollectionToVariant: function(e) {
             let $target = $(e.target),
                 value = $target.val(),
-                collectionID = $target.closest(CLASS_FIELDSET).attr('fieldset-varitions-id'),
+                collectionID = $target.closest(CLASS_FIELDSET).attr('fieldset-variants-id'),
                 $editableVariant = $(`tr[variants-id="${collectionID}"]`),
                 variantType = $target.prop('name').match(/\.\w+$/g)[0].replace('.', ''),
                 $td,
@@ -849,7 +858,7 @@
         hideRemovedVariants: function(id) {
             let $tr = this.$tbody.find(`tr[variants-id="${id}"]`),
                 $editor = this.$tbody.find('.qor-variant__edit'),
-                $collection = this.$element.find(`fieldset[fieldset-varitions-id="${id}"]`);
+                $collection = this.$element.find(`fieldset[fieldset-variants-id="${id}"]`);
 
             if (!$tr.length || !$collection.length || $tr.hasClass('is_deleted')) {
                 return;
@@ -1061,7 +1070,7 @@
         // sync variants data between table and replicator
         addVariantReplicator: function(e, $item, data) {
             $item = this.syncReplicatorData($item, data);
-            $item.attr('fieldset-varitions-id', data.variantID).hide();
+            $item.attr('fieldset-variants-id', data.variantID).hide();
             this.replicatorTemplate.push($item.prop('outerHTML'));
         },
 

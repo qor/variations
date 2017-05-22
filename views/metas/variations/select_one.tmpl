@@ -5,7 +5,7 @@
 
   <div class="qor-field__block qor-field__edit  qor-field__selectone" {{if (eq .Meta.Config.SelectMode "bottom_sheet")}} data-toggle="qor.selectone"{{end}}>
     {{if (eq .Meta.Config.SelectMode "bottom_sheet")}}
-      <a  href="javascript://" class="mdl-button mdl-button--primary qor-field__selectmany-trigger" data-select-modal="many" {{if .InputId}}data-select-id="#{{.InputId}}"{{end}} data-selectmany-url="{{url_for .Meta.Config.RemoteDataResource}}">
+      <a  href="javascript://" class="mdl-button mdl-button--primary qor-field__selectmany-trigger" data-select-modal="many" {{if .InputId}}data-select-id="#{{.InputId}}"{{end}} data-select-listing-url="{{url_for .Meta.Config.RemoteDataResource}}">
         {{t "qor_admin.form.add_items" "ADD ITEMS"}}
       </a>
 

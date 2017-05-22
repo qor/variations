@@ -1,6 +1,7 @@
 {{$current_values := (raw_value_of .ResourceValue .Meta)}}
 {{$meta := .Meta}}
 {{$inputName := .InputName}}
+{{$primaryMeta := $meta.Config.PrimaryAttributeMetas}}
 
 <div class="qor-field" data-toggle="qor.variations" data-input-name="{{$inputName}}" {{if $current_values}}data-input-value-length="{{len $current_values}}" {{end}}>
   <label class="qor-field__label" for="{{.InputId}}">
@@ -12,7 +13,7 @@
   </label>
 
   <div class="qor-fieldset-container qor-product__container">
-    <div class="qor-product__property">
+    <div class="qor-product__property" data-has-primary-meta={{len $primaryMeta}}>
       {{range $primaryMeta := $meta.Config.PrimaryAttributeMetas}}
         <!-- render meta based on meta type (like select one -> select many, string -> tags) -->
         {{render_meta $meta.Resource.NewStruct $primaryMeta "variations"}}
@@ -48,7 +49,9 @@
           <tbody>
             {{if $current_values}}
               {{range $index, $value := $current_values}}
-                <tr class="qor-product-init">
+              {{$primaryKey := primary_key_of $value}}
+
+                <tr class="qor-product-init" {{if $primaryKey}}variants-id="qor_variants_id_{{$primaryKey}}_"{{end}}>
                   {{range $meta := convert_sections_to_metas $meta.Resource (edit_sections $meta.Resource)}}
                     <td class="mdl-data-table__cell--non-numeric" data-variant-type="{{$meta.Name}}" data-variant-value="{{render_meta $value $meta "index"}}" data-input-name="{{printf "%v[%v].%v" $inputName $index $meta.Name}}">
                       {{render_meta $value $meta "index"}}
@@ -79,9 +82,10 @@
 
       <div class="qor-fieldset--inits">
         {{range $index, $value := $current_values }}
-          <fieldset class="qor-fieldset qor-fieldset--init qor-product-init hidden">
+        {{$primaryKey := primary_key_of $value}}
+          <fieldset class="qor-fieldset qor-fieldset--init qor-product-init hidden" {{if $primaryKey}}fieldset-variants-id="qor_variants_id_{{$primaryKey}}_"{{end}}>
             {{if has_delete_permission $meta}}
-              <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
+              <button class="mdl-button qor-button--muted mdl-button--icon qor-fieldset__delete" type="button">
                 <i class="material-icons md-18">delete</i>
               </button>
             {{end}}
@@ -92,7 +96,7 @@
 
       {{if has_create_permission .Meta}}
         <fieldset class="qor-fieldset qor-fieldset--new">
-          <button class="mdl-button qor-button--muted mdl-button--icon mdl-js-button qor-fieldset__delete" type="button">
+          <button class="mdl-button qor-button--muted mdl-button--icon qor-fieldset__delete" type="button">
             <i class="material-icons md-18">delete</i>
           </button>
           {{if $current_values}}
@@ -102,7 +106,7 @@
           {{end}}
         </fieldset>
 
-        <button class="mdl-button mdl-button--primary mdl-js-button mdl-js-ripple-effect qor-fieldset__add hidden" type="button">
+        <button class="mdl-button mdl-button--primary mdl-js-ripple-effect qor-fieldset__add hidden" type="button">
           {{t (printf "%v.attributes.add_%v" .BaseResource.ToParam (singular (meta_label .Meta))) (printf "Add %v" (singular (meta_label .Meta)))}}
         </button>
       {{end}}
