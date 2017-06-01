@@ -34,13 +34,14 @@ func (variationsConfig *VariationsConfig) ConfigureQorMeta(metaor resource.Metao
 
 		variationsRes := meta.Resource
 		variationsConfig.resource = variationsRes
-		definedPrimaryAttrs := len(variationsConfig.PrimaryAttrs) > 0
 
-		for _, meta := range variationsRes.ConvertSectionToMetas(meta.Resource.EditAttrs()) {
-			if !definedPrimaryAttrs {
-				tagSettings := utils.ParseTagOption(meta.FieldStruct.Tag.Get("variations"))
-				if _, ok := tagSettings["PRIMARY"]; ok {
-					variationsConfig.PrimaryAttrs = append(variationsConfig.PrimaryAttrs, meta.Name)
+		if len(variationsConfig.PrimaryAttrs) == 0 {
+			for _, meta := range variationsRes.ConvertSectionToMetas(meta.Resource.EditAttrs()) {
+				if meta.FieldStruct != nil {
+					tagSettings := utils.ParseTagOption(meta.FieldStruct.Tag.Get("variations"))
+					if _, ok := tagSettings["PRIMARY"]; ok {
+						variationsConfig.PrimaryAttrs = append(variationsConfig.PrimaryAttrs, meta.Name)
+					}
 				}
 			}
 		}
